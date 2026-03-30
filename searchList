@@ -1,0 +1,22 @@
+Algorithms for Unsorted Data
+
+   Linear Search (Sequential Search)
+
+Algorithms for Sorted Data
+
+   Binary Search (divided into 2 repeated)
+   Ternary Search (divided into 3 repeated)
+   Jump Search (jump fixed alus then linear)
+   Interpolation Search (binary but estimates)
+   Exponential Search (doubles index then binary)
+   Fibonacci Search (binary but fibonacci intervals)
+
+Tree and Graph Searches
+
+   Breadth-First Search (BFS) (Queue)
+   Depth-First Search (DFS) (Stack)
+
+String/Text Searches:
+
+   Knuth-Morris-Pratt (KMP) (substring with larger tring, doesn't repeat)
+   Rabin-Karp (hashing to find subtring in large text body)
