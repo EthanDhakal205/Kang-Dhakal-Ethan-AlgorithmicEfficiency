@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/** Selection Sort — O(n²) always. Stable: NO. */
 public class SelectionSort {
     public static AlgoResult sort(int[] inputArray) {
         int[] arr = Arrays.copyOf(inputArray, inputArray.length);

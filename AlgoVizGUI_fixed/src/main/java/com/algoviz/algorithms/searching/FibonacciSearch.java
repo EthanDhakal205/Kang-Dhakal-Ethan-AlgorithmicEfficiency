@@ -6,11 +6,6 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Fibonacci Search — O(log n).
- * Uses Fibonacci numbers to divide the array. Better cache performance than binary search
- * because it avoids division and uses only addition/subtraction.
- */
 public class FibonacciSearch {
 
     public static AlgoResult search(int[] inputArray, int target) {
@@ -46,11 +41,13 @@ public class FibonacciSearch {
                 steps.add(s(arr, StepType.HIGHLIGHT, arr[i] + " < " + target + " → move offset to " + i + ", shift Fibonacci down", comparisons, -1, i));
                 fibM = fibM1; fibM1 = fibM2; fibM2 = fibM - fibM1;
                 offset = i;
-            } else if (arr[i] > target) {
+            } 
+            else if (arr[i] > target) {
                 steps.add(s(arr, StepType.HIGHLIGHT, arr[i] + " > " + target + " → search lower section, smaller Fibonacci", comparisons, -1, i));
                 fibM = fibM2; fibM1 = fibM1 - fibM2; fibM2 = fibM - fibM1;
-            } else {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at index " + i + "!", i);
+            } 
+            else {
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "Found " + target + " at index " + i + "!", i);
                 found.setComparisons(comparisons); found.setFoundIndex(i); steps.add(found);
                 return JumpSearch.finish("Fibonacci Search", steps, comparisons, i,
                         "O(1)", "O(log n)", "O(log n)", "O(1)",
@@ -62,7 +59,7 @@ public class FibonacciSearch {
             comparisons++;
             steps.add(s(arr, StepType.COMPARE, "Last check: arr[" + (offset+1) + "]=" + arr[offset+1], comparisons, -1, offset+1));
             if (arr[offset + 1] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at index " + (offset+1) + "!", offset+1);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "Found " + target + " at index " + (offset+1) + "!", offset+1);
                 found.setComparisons(comparisons); found.setFoundIndex(offset+1); steps.add(found);
                 return JumpSearch.finish("Fibonacci Search", steps, comparisons, offset+1,
                         "O(1)", "O(log n)", "O(log n)", "O(1)",
@@ -70,7 +67,7 @@ public class FibonacciSearch {
             }
         }
 
-        steps.add(s(arr, StepType.NOT_FOUND, "❌ " + target + " not found.", comparisons, -1));
+        steps.add(s(arr, StepType.NOT_FOUND, " X " + target + " not found.", comparisons, -1));
         return JumpSearch.finish("Fibonacci Search", steps, comparisons, -1,
                 "O(1)", "O(log n)", "O(log n)", "O(1)",
                 "Fibonacci Search uses Fibonacci numbers to divide the array. No division required — only addition and subtraction.");

@@ -8,11 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Merge Sort — O(n log n) all cases.
- * Stable: YES | In-place: NO (O(n) space)
- * Guarantees O(n log n) worst case. Used in Java's Arrays.sort for objects.
- */
 public class MergeSort {
 
     private static int comparisons, swaps;

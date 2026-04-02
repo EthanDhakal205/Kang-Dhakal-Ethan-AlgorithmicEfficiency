@@ -6,12 +6,6 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Tim Sort — O(n log n) worst, O(n) best.
- * Stable: YES | In-place: NO
- * Hybrid of Merge Sort + Insertion Sort. Used in Java's Arrays.sort() for primitives
- * and Python's built-in sort. The real-world GOAT sorting algorithm.
- */
 public class TimSort {
 
     private static final int RUN = 32;

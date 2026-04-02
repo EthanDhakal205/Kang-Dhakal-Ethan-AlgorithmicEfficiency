@@ -6,12 +6,6 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Bogo Sort — O((n+1)!) average. The WORST sort imaginable.
- * Stable: NO | In-place: YES
- * Randomly shuffles until sorted. Included purely for educational humor.
- * We cap at 200 attempts for sanity.
- */
 public class BogoSort {
 
     public static AlgoResult sort(int[] inputArray) {
@@ -23,7 +17,7 @@ public class BogoSort {
         Random rng = new Random(42); // Seeded for reproducibility
 
         steps.add(step(arr, StepType.INITIAL,
-                "⚠️ BOGO SORT — The world's worst algorithm! We just randomly shuffle until it's sorted. Pure chaos.", comparisons, swaps));
+                "BOGO SORT - The world's worst algorithm! We just randomly shuffle until it's sorted. Pure chaos.", comparisons, swaps));
 
         int attempt = 0;
         while (!isSorted(arr) && attempt < maxAttempts) {
@@ -42,12 +36,12 @@ public class BogoSort {
 
         if (isSorted(arr)) {
             steps.add(step(arr, StepType.FINAL,
-                    "🎉 IT'S SORTED after " + attempt + " random shuffles! Expected attempts: " + factorial(arr.length) + ". We got lucky!", comparisons, swaps));
+                    "IT'S SORTED after " + attempt + " random shuffles! Expected attempts: " + factorial(arr.length) + ". We got lucky!", comparisons, swaps));
         } else {
             // Force sort for display
             Arrays.sort(arr);
             steps.add(step(arr, StepType.FINAL,
-                    "😤 Gave up after " + maxAttempts + " attempts. Force-sorted for your sanity. Bogo Sort is a joke. (avg attempts for n=" + arr.length + ": " + factorial(arr.length) + ")", comparisons, swaps));
+                    "Gave up after " + maxAttempts + " attempts. Force-sorted for your sanity. Bogo Sort is a joke. (avg attempts for n=" + arr.length + ": " + factorial(arr.length) + ")", comparisons, swaps));
         }
 
         AlgoResult result = new AlgoResult("Bogo Sort", "sort", steps);

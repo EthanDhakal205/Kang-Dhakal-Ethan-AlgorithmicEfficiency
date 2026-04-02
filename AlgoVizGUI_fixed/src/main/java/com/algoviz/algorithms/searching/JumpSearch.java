@@ -6,7 +6,7 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/** Jump Search — O(√n). Sorted array required. Jumps in blocks, then linear searches. */
+
 public class JumpSearch {
 
     public static AlgoResult search(int[] inputArray, int target) {
@@ -34,7 +34,7 @@ public class JumpSearch {
             comparisons++;
             steps.add(s(arr, StepType.COMPARE, "Checking arr[" + prev + "]=" + arr[prev] + " == " + target + "?", comparisons, -1, prev));
             if (arr[prev] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at index " + prev + "!", prev);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "Found " + target + " at index " + prev + "!", prev);
                 found.setComparisons(comparisons); found.setFoundIndex(prev); steps.add(found);
                 return finish("Jump Search", steps, comparisons, prev,
                         "O(1)", "O(√n)", "O(√n)", "O(1)",
@@ -43,7 +43,7 @@ public class JumpSearch {
             prev++;
         }
 
-        steps.add(s(arr, StepType.NOT_FOUND, "❌ " + target + " not found.", comparisons, -1));
+        steps.add(s(arr, StepType.NOT_FOUND, "X " + target + " not found.", comparisons, -1));
         return finish("Jump Search", steps, comparisons, -1, "O(1)", "O(√n)", "O(√n)", "O(1)",
                 "Jump Search divides array into blocks and searches block by block.");
     }

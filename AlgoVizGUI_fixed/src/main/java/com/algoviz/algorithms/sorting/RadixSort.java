@@ -6,11 +6,6 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Radix Sort — O(nk) where k = number of digits.
- * Stable: YES | In-place: NO
- * Non-comparison sort! Can beat O(n log n) for integers with small digit count.
- */
 public class RadixSort {
 
     public static AlgoResult sort(int[] inputArray) {

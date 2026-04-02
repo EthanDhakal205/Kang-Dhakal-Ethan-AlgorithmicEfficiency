@@ -6,11 +6,7 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Ternary Search — O(log₃ n) = O(log n).
- * Divides array into THREE parts (not two like binary).
- * Interestingly, it makes MORE comparisons than binary search despite the smaller range reduction ratio.
- */
+
 public class TernarySearch {
 
     public static AlgoResult search(int[] inputArray, int target) {
@@ -35,12 +31,12 @@ public class TernarySearch {
                     comparisons, -1, left, mid1, mid2, right));
 
             if (arr[mid1] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at mid1=" + mid1 + "!", mid1);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, " Found " + target + " at mid1=" + mid1 + "!", mid1);
                 found.setComparisons(comparisons); found.setFoundIndex(mid1); steps.add(found);
                 return done(steps, comparisons, mid1);
             }
             if (arr[mid2] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at mid2=" + mid2 + "!", mid2);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "Found " + target + " at mid2=" + mid2 + "!", mid2);
                 found.setComparisons(comparisons); found.setFoundIndex(mid2); steps.add(found);
                 return done(steps, comparisons, mid2);
             }
@@ -58,7 +54,7 @@ public class TernarySearch {
             }
         }
 
-        steps.add(s(arr, StepType.NOT_FOUND, "❌ " + target + " not found.", comparisons, -1));
+        steps.add(s(arr, StepType.NOT_FOUND, "X " + target + " not found.", comparisons, -1));
         return JumpSearch.finish("Ternary Search", steps, comparisons, -1,
                 "O(1)", "O(log₃ n)", "O(log₃ n)", "O(1)",
                 "Ternary Search divides the array into three equal parts and determines which third contains the target. Despite the smaller range each step, it requires 2 comparisons per iteration vs Binary's 1-2, making it slightly less efficient in practice.");

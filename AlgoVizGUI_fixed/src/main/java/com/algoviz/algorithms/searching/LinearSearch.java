@@ -6,10 +6,7 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Linear Search — O(n) worst/average, O(1) best.
- * Works on any array, sorted or unsorted. Simple and reliable.
- */
+
 public class LinearSearch {
 
     public static AlgoResult search(int[] inputArray, int target) {
@@ -24,7 +21,7 @@ public class LinearSearch {
             steps.add(step(arr, StepType.COMPARE, "Checking arr[" + i + "]=" + arr[i] + " == " + target + "?", comparisons, -1, i));
 
             if (arr[i] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at index " + i + "!", i);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, " Found " + target + " at index " + i + "!", i);
                 found.setComparisons(comparisons); found.setFoundIndex(i); steps.add(found);
 
                 AlgoResult result = buildResult("Linear Search", steps, comparisons, 0, i);
@@ -35,7 +32,7 @@ public class LinearSearch {
             }
         }
 
-        steps.add(step(arr, StepType.NOT_FOUND, "❌ " + target + " not found after checking all " + arr.length + " elements.", comparisons, -1));
+        steps.add(step(arr, StepType.NOT_FOUND, "X " + target + " not found after checking all " + arr.length + " elements.", comparisons, -1));
         AlgoResult result = buildResult("Linear Search", steps, comparisons, 0, -1);
         result.setTimeComplexityBest("O(1)"); result.setTimeComplexityAvg("O(n)"); result.setTimeComplexityWorst("O(n)");
         result.setSpaceComplexity("O(1)"); result.setStable(true);

@@ -8,11 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Quick Sort — O(n log n) average, O(n²) worst.
- * Stable: NO | In-place: YES (O(log n) stack)
- * One of the fastest practical sorting algorithms due to cache efficiency.
- */
+
 public class QuickSort {
 
     private static int comparisons, swaps;

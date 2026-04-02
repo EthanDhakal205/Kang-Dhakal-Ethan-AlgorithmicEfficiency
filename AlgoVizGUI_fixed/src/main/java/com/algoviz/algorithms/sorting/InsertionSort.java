@@ -8,11 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Insertion Sort — O(n²) average/worst, O(n) best.
- * Stable: YES | In-place: YES
- * Excellent for nearly-sorted or small arrays. Used inside TimSort.
- */
 public class InsertionSort {
 
     public static AlgoResult sort(int[] inputArray) {

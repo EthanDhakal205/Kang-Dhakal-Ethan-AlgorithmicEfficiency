@@ -55,8 +55,9 @@ public class SidebarPanel extends JPanel {
         allAlgos.addAll(SORT_ALGOS);
         allAlgos.addAll(SEARCH_ALGOS);
 
-        setPreferredSize(new Dimension(Theme.SIDEBAR_W, 0));
-        setMinimumSize(new Dimension(Theme.SIDEBAR_W, 400));
+        int contentH = 72 + 28 + (SORT_ALGOS.size() * 34) + 1 + 28 + (SEARCH_ALGOS.size() * 34) + 1 + 70;
+        setPreferredSize(new Dimension(Theme.SIDEBAR_W, contentH));
+        setMinimumSize(new Dimension(Theme.SIDEBAR_W, 300));
         setBackground(Theme.BG2);
 
         setupMouseListeners();
@@ -199,7 +200,7 @@ public class SidebarPanel extends JPanel {
 
     private void paintFooter(Graphics2D g2, int W, int startY) {
         int footerH = 70;
-        int y = getHeight() - footerH;
+        int y = startY;
 
         g2.setColor(Theme.BORDER);
         g2.drawLine(0, y, W, y);

@@ -8,11 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Heap Sort — O(n log n) all cases.
- * Stable: NO | In-place: YES
- * Uses a binary max-heap. Consistent performance but poor cache behavior.
- */
 public class HeapSort {
 
     private static int comparisons, swaps;

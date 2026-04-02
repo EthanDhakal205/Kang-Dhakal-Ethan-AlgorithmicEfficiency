@@ -8,11 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Bubble Sort — O(n²) average/worst, O(n) best (optimized).
- * Stable: YES | In-place: YES
- * Simple but inefficient. Good for teaching fundamentals.
- */
+
 public class BubbleSort {
 
     public static AlgoResult sort(int[] inputArray) {

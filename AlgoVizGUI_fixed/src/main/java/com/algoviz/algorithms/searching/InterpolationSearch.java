@@ -6,10 +6,7 @@ import com.algoviz.models.AlgoStep.StepType;
 
 import java.util.*;
 
-/**
- * Interpolation Search — O(log log n) average for uniform, O(n) worst.
- * Like binary search but probes based on value interpolation — smarter for uniform distributions.
- */
+
 public class InterpolationSearch {
 
     public static AlgoResult search(int[] inputArray, int target) {
@@ -27,7 +24,7 @@ public class InterpolationSearch {
             if (low == high) {
                 comparisons++;
                 if (arr[low] == target) {
-                    AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at index " + low, low);
+                    AlgoStep found = new AlgoStep(arr, StepType.FOUND, " Found " + target + " at index " + low, low);
                     found.setComparisons(comparisons); found.setFoundIndex(low); steps.add(found);
                     return JumpSearch.finish("Interpolation Search", steps, comparisons, low,
                             "O(1)", "O(log log n)", "O(n)", "O(1)",
@@ -45,7 +42,7 @@ public class InterpolationSearch {
                     comparisons, -1, low, pos, high));
 
             if (arr[pos] == target) {
-                AlgoStep found = new AlgoStep(arr, StepType.FOUND, "🎯 Found " + target + " at estimated position " + pos + "!", pos);
+                AlgoStep found = new AlgoStep(arr, StepType.FOUND, " Found " + target + " at estimated position " + pos + "!", pos);
                 found.setComparisons(comparisons); found.setFoundIndex(pos); steps.add(found);
                 return JumpSearch.finish("Interpolation Search", steps, comparisons, pos,
                         "O(1)", "O(log log n)", "O(n)", "O(1)",
@@ -59,7 +56,7 @@ public class InterpolationSearch {
             }
         }
 
-        steps.add(s(arr, StepType.NOT_FOUND, "❌ " + target + " not found.", comparisons, -1));
+        steps.add(s(arr, StepType.NOT_FOUND, "X " + target + " not found.", comparisons, -1));
         return JumpSearch.finish("Interpolation Search", steps, comparisons, -1,
                 "O(1)", "O(log log n)", "O(n)", "O(1)",
                 "Interpolation Search improves on binary search for uniformly distributed data.");
