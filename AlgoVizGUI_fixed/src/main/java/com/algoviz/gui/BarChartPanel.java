@@ -9,11 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
-/**
- * BarChartPanel — custom-painted Swing panel that renders the algorithm
- * visualization. Draws animated bars, glow effects, grid lines, value labels,
- * index labels, and a search beam for search algorithms.
- */
 public class BarChartPanel extends JPanel {
 
     private AlgoStep currentStep;
