@@ -7,35 +7,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-/**
- * SidebarPanel — fully custom-painted sidebar navigation.
- * Renders the logo, sorted sections of algorithm buttons, and speed control.
- */
 public class SidebarPanel extends JPanel {
 
     public record AlgoEntry(String id, String name, String category, String badge, Color badgeColor) {}
 
     private static final List<AlgoEntry> SORT_ALGOS = List.of(
-        new AlgoEntry("bubble",    "Bubble Sort",       "sort",   "O(n²)",      Theme.ACCENT3),
-        new AlgoEntry("insertion", "Insertion Sort",    "sort",   "O(n²)",      Theme.ACCENT3),
-        new AlgoEntry("selection", "Selection Sort",    "sort",   "O(n²)",      Theme.ACCENT3),
-        new AlgoEntry("gnome",     "Gnome Sort \uD83C\uDF3F","sort","O(n²)",   Theme.ACCENT3),
-        new AlgoEntry("bogo",      "Bogo Sort \uD83D\uDC80","sort","O(\u221E)", Theme.ACCENT2),
-        new AlgoEntry("merge",     "Merge Sort",        "sort",   "O(n log n)", Theme.ACCENT5),
-        new AlgoEntry("quick",     "Quick Sort",        "sort",   "O(n log n)", Theme.ACCENT5),
-        new AlgoEntry("heap",      "Heap Sort",         "sort",   "O(n log n)", Theme.ACCENT5),
-        new AlgoEntry("tim",       "Tim Sort \u2B50",   "sort",   "O(n log n)", Theme.ACCENT),
-        new AlgoEntry("radix",     "Radix Sort",        "sort",   "O(nk)",      Theme.ACCENT)
+        new AlgoEntry("bubble",  "Bubble Sort", "sort", "O(n²)", Theme.ACCENT3),
+        new AlgoEntry("insertion", "Insertion Sort", "sort", "O(n²)", Theme.ACCENT3),
+        new AlgoEntry("selection", "Selection Sort", "sort", "O(n²)",  Theme.ACCENT3),
+        new AlgoEntry("gnome", "Gnome Sort \uD83C\uDF3F","sort","O(n²)", Theme.ACCENT3),
+        new AlgoEntry("bogo", "Bogo Sort \uD83D\uDC80","sort","O(\u221E)", heme.ACCENT2),
+        new AlgoEntry("merge", "Merge Sort", "sort","O(n log n)", Theme.ACCENT5),
+        new AlgoEntry("quick", "Quick Sort", "sort","O(n log n)", Theme.ACCENT5),
+        new AlgoEntry("heap", "Heap Sort","sort", "O(n log n)", Theme.ACCENT5),
+        new AlgoEntry("tim", "Tim Sort \u2B50",   "sort",   "O(n log n)", Theme.ACCENT),
+        new AlgoEntry("radix", "Radix Sort","sort","O(nk)", Theme.ACCENT)
     );
 
     private static final List<AlgoEntry> SEARCH_ALGOS = List.of(
-        new AlgoEntry("linear",        "Linear Search",        "search", "O(n)",        Theme.ACCENT3),
-        new AlgoEntry("binary",        "Binary Search",        "search", "O(log n)",    Theme.ACCENT5),
-        new AlgoEntry("jump",          "Jump Search",          "search", "O(\u221An)",  Theme.ACCENT5),
-        new AlgoEntry("interpolation", "Interpolation",        "search", "O(log log n)",Theme.ACCENT),
-        new AlgoEntry("exponential",   "Exponential",          "search", "O(log n)",    Theme.ACCENT5),
-        new AlgoEntry("fibonacci",     "Fibonacci \uD83C\uDF00","search","O(log n)",   Theme.ACCENT5),
-        new AlgoEntry("ternary",       "Ternary Search",       "search", "O(log\u2083n)",Theme.ACCENT5)
+        new AlgoEntry("linear", "Linear Search", "search", "O(n)",Theme.ACCENT3),
+        new AlgoEntry("binary", "Binary Search","search", "O(log n)",Theme.ACCENT5),
+        new AlgoEntry("jump", "Jump Search", "search", "O(\u221An)",  Theme.ACCENT5),
+        new AlgoEntry("interpolation", "Interpolation", "search", "O(log log n)",Theme.ACCENT),
+        new AlgoEntry("exponential","Exponential", "search", "O(log n)",    Theme.ACCENT5),
+        new AlgoEntry("fibonacci", "Fibonacci \uD83C\uDF00","search","O(log n)",   Theme.ACCENT5),
+        new AlgoEntry("ternary", "Ternary Search", "search", "O(log\u2083n)",Theme.ACCENT5)
     );
 
     private String selectedId = "bubble";
@@ -70,7 +66,7 @@ public class SidebarPanel extends JPanel {
         return allAlgos.stream().filter(a -> a.id().equals(selectedId)).findFirst().orElse(null);
     }
 
-    // ── PAINTING ──────────────────────────────────────────────────────────
+    //  PAINTING 
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -245,7 +241,7 @@ public class SidebarPanel extends JPanel {
         g2.drawString("SPACE play  \u2190\u2192 step  R random", 16, y + 62);
     }
 
-    // ── MOUSE INPUT ───────────────────────────────────────────────────────
+    //  MOUSE INPUT 
 
     private void setupMouseListeners() {
         addMouseMotionListener(new MouseMotionAdapter() {

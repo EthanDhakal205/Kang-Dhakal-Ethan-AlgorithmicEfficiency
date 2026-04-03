@@ -11,16 +11,16 @@ import java.util.List;
 public class AlgoStep {
 
     public enum StepType {
-        COMPARE,       // Two elements being compared
-        SWAP,          // Two elements being swapped
-        PIVOT,         // Pivot element highlighted (QuickSort)
-        MERGE,         // Merging phase (MergeSort)
-        FOUND,         // Target element found (Search)
-        NOT_FOUND,     // Target not in array (Search)
-        HIGHLIGHT,     // Generic highlight (e.g. current index)
-        SORTED,        // Mark elements as sorted/finalized
-        INITIAL,       // Initial state
-        FINAL          // Final sorted state
+        COMPARE,  // Two elements being compared
+        SWAP, // Two elements being swapped
+        PIVOT, // Pivot element highlighted (QuickSort)
+        MERGE, // Merging phase (MergeSort)
+        FOUND, // Target element found (Search)
+        NOT_FOUND,// Target not in array (Search)
+        HIGHLIGHT, // Generic highlight (e.g. current index)
+        SORTED, // Mark elements as sorted/finalized
+        INITIAL,// Initial state
+        FINAL// Final sorted state
     }
 
     private int[] array;
@@ -46,7 +46,7 @@ public class AlgoStep {
         }
     }
 
-    // --- Getters & Setters ---
+    //  Getters & Setters 
 
     public int[] getArray() { return array; }
     public void setArray(int[] array) { this.array = Arrays.copyOf(array, array.length); }

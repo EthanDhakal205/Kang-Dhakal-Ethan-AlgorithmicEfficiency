@@ -16,24 +16,24 @@ public class InfoPanel extends JPanel {
 
     // Table data: {id, name, best, avg, worst, space}
     private static final String[][] SORT_TABLE = {
-        {"bubble",    "Bubble",  "O(n)",      "O(n²)",      "O(n²)",     "O(1)"},
-        {"insertion", "Insert",  "O(n)",      "O(n²)",      "O(n²)",     "O(1)"},
-        {"selection", "Select",  "O(n²)",     "O(n²)",      "O(n²)",     "O(1)"},
-        {"merge",     "Merge",   "O(n log n)","O(n log n)", "O(n log n)","O(n)"},
-        {"quick",     "Quick",   "O(n log n)","O(n log n)", "O(n²)",     "O(log n)"},
-        {"heap",      "Heap",    "O(n log n)","O(n log n)", "O(n log n)","O(1)"},
-        {"tim",       "Tim",     "O(n)",      "O(n log n)", "O(n log n)","O(n)"},
-        {"radix",     "Radix",   "O(n)",      "O(nk)",      "O(nk)",     "O(n+k)"},
+        {"bubble","Bubble","O(n)",  "O(n²)", "O(n²)","O(1)"},
+        {"insertion", "Insert","O(n)", "O(n²)", "O(n²)", "O(1)"},
+        {"selection", "Select",  "O(n²)", "O(n²)", "O(n²)", "O(1)"},
+        {"merge", "Merge", "O(n log n)","O(n log n)", "O(n log n)","O(n)"},
+        {"quick", "Quick",   "O(n log n)","O(n log n)", "O(n²)", "O(log n)"},
+        {"heap", "Heap", "O(n log n)","O(n log n)", "O(n log n)","O(1)"},
+        {"tim", "Tim", "O(n)", "O(n log n)", "O(n log n)","O(n)"},
+        {"radix", "Radix","O(n)", "O(nk)","O(nk)", "O(n+k)"},
     };
 
     private static final String[][] SEARCH_TABLE = {
-        {"linear",        "Linear", "O(1)", "O(n)",        "O(n)",       "O(1)"},
-        {"binary",        "Binary", "O(1)", "O(log n)",    "O(log n)",   "O(1)"},
-        {"jump",          "Jump",   "O(1)", "O(\u221An)",  "O(\u221An)", "O(1)"},
-        {"interpolation", "Interp", "O(1)", "O(log log n)","O(n)",       "O(1)"},
-        {"exponential",   "Expo",   "O(1)", "O(log n)",    "O(log n)",   "O(1)"},
-        {"fibonacci",     "Fib",    "O(1)", "O(log n)",    "O(log n)",   "O(1)"},
-        {"ternary",       "Ternary","O(1)", "O(log\u2083n)","O(log\u2083n)","O(1)"},
+        {"linear", "Linear", "O(1)", "O(n)","O(n)", "O(1)"},
+        {"binary",  "Binary", "O(1)", "O(log n)", "O(log n)","O(1)"},
+        {"jump", "Jump",   "O(1)", "O(\u221An)",  "O(\u221An)", "O(1)"},
+        {"interpolation", "Interp", "O(1)", "O(log log n)","O(n)", "O(1)"},
+        {"exponential",  "Expo",  "O(1)", "O(log n)", "O(log n)","O(1)"},
+        {"fibonacci", "Fib", "O(1)", "O(log n)", "O(log n)", "O(1)"},
+        {"ternary", "Ternary","O(1)", "O(log\u2083n)","O(log\u2083n)","O(1)"},
     };
 
     private static final String[] HEADERS = {"ALGO", "BEST", "AVG", "WORST", "SPACE"};
@@ -45,8 +45,8 @@ public class InfoPanel extends JPanel {
     }
 
     public void update(String id, String cat, String desc) {
-        this.currentId   = id;
-        this.category    = cat;
+        this.currentId  = id;
+        this.category = cat;
         this.description = desc;
         repaint();
     }
@@ -70,7 +70,7 @@ public class InfoPanel extends JPanel {
         int halfW = W / 2;
         int pad = 14;
 
-        // ── LEFT: description ─────────────────────────────────────────────
+        //  LEFT: description 
         paintSectionHeader(g2, pad, 12, "ABOUT THIS ALGORITHM");
 
         g2.setFont(Theme.FONT_MONO);
@@ -81,7 +81,7 @@ public class InfoPanel extends JPanel {
         g2.setColor(Theme.BORDER);
         g2.drawLine(halfW, 10, halfW, H - 10);
 
-        // ── RIGHT: complexity table ────────────────────────────────────────
+        //  RIGHT: complexity table 
         int tx = halfW + pad;
         paintSectionHeader(g2, tx, 12, "COMPLEXITY COMPARISON");
         paintComplexityTable(g2, tx, 30, W - tx - pad, H - 36);
@@ -129,7 +129,8 @@ public class InfoPanel extends JPanel {
                 g2.fillRoundRect(tx, ry, tw, rowH, 3, 3);
                 g2.setColor(Theme.withAlpha(Theme.ACCENT, 50));
                 g2.drawRoundRect(tx, ry, tw - 1, rowH - 1, 3, 3);
-            } else if (r % 2 == 0) {
+            } 
+            else if (r % 2 == 0) {
                 g2.setColor(Theme.withAlpha(Theme.SURFACE, 60));
                 g2.fillRect(tx, ry, tw, rowH);
             }
@@ -185,7 +186,8 @@ public class InfoPanel extends JPanel {
                     curY += lineH;
                     if (curY > y + maxH) return;
                 }
-            } else {
+            } 
+            else {
                 line = new StringBuilder(test);
             }
         }

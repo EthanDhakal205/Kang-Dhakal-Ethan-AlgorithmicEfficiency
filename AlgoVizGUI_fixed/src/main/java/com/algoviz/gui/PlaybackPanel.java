@@ -4,10 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-/**
- * PlaybackPanel — the transport control bar: ⏮ ◀ ▶/⏸ ▶ ⏭
- * Fully custom-painted circular buttons.
- */
+
 public class PlaybackPanel extends JPanel {
 
     public interface PlaybackListener {
@@ -38,10 +35,10 @@ public class PlaybackPanel extends JPanel {
         btnLast  = new CircleButton("⏭", 38, Theme.TEXT2, false);
 
         btnFirst.addActionListener(e -> listener.onFirst());
-        btnPrev.addActionListener(e  -> listener.onPrev());
-        btnPlay.addActionListener(e  -> listener.onPlayPause());
-        btnNext.addActionListener(e  -> listener.onNext());
-        btnLast.addActionListener(e  -> listener.onLast());
+        btnPrev.addActionListener(e -> listener.onPrev());
+        btnPlay.addActionListener(e -> listener.onPlayPause());
+        btnNext.addActionListener(e -> listener.onNext());
+        btnLast.addActionListener(e -> listener.onLast());
 
         add(btnFirst);
         add(btnPrev);
@@ -56,7 +53,7 @@ public class PlaybackPanel extends JPanel {
         btnPlay.repaint();
     }
 
-    // ── CIRCLE BUTTON ─────────────────────────────────────────────────────
+    //  CIRCLE BUTTON 
 
     private static class CircleButton extends JButton {
         private final int size;
@@ -65,8 +62,8 @@ public class PlaybackPanel extends JPanel {
         private String label;
 
         CircleButton(String label, int size, Color fg, boolean primary) {
-            this.label   = label;
-            this.size    = size;
+            this.label = label;
+            this.size = size;
             this.primary = primary;
             setForeground(fg);
             setOpaque(false);
@@ -115,7 +112,8 @@ public class PlaybackPanel extends JPanel {
                 if (hovered) {
                     g2.setColor(Theme.ACCENT);
                     g2.setFont(new Font(Font.MONOSPACED, Font.BOLD, (int)(d * 0.35)));
-                } else {
+                } 
+                else {
                     g2.setColor(Theme.TEXT2);
                     g2.setFont(new Font(Font.MONOSPACED, Font.PLAIN, (int)(d * 0.35)));
                 }
