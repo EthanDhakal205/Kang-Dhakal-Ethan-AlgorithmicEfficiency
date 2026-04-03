@@ -29,10 +29,10 @@ public class PlaybackPanel extends JPanel {
         setPreferredSize(new Dimension(0, 70));
 
         btnFirst = new CircleButton("⏮", 38, Theme.TEXT2, false);
-        btnPrev  = new CircleButton("◀", 38, Theme.TEXT2, false);
-        btnPlay  = new CircleButton("▶", 52, Theme.BG, true);
-        btnNext  = new CircleButton("▶", 38, Theme.TEXT2, false);
-        btnLast  = new CircleButton("⏭", 38, Theme.TEXT2, false);
+        btnPrev= new CircleButton("◀", 38, Theme.TEXT2, false);
+        btnPlay= new CircleButton("▶", 52, Theme.BG, true);
+        btnNext= new CircleButton("▶", 38, Theme.TEXT2, false);
+        btnLast= new CircleButton("⏭", 38, Theme.TEXT2, false);
 
         btnFirst.addActionListener(e -> listener.onFirst());
         btnPrev.addActionListener(e -> listener.onPrev());

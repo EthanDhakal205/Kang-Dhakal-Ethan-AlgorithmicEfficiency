@@ -16,7 +16,7 @@ public class SidebarPanel extends JPanel {
         new AlgoEntry("insertion", "Insertion Sort", "sort", "O(n²)", Theme.ACCENT3),
         new AlgoEntry("selection", "Selection Sort", "sort", "O(n²)",  Theme.ACCENT3),
         new AlgoEntry("gnome", "Gnome Sort \uD83C\uDF3F","sort","O(n²)", Theme.ACCENT3),
-        new AlgoEntry("bogo", "Bogo Sort \uD83D\uDC80","sort","O(\u221E)", heme.ACCENT2),
+        new AlgoEntry("bogo", "Bogo Sort \uD83D\uDC80","sort","O(\u221E)", Theme.ACCENT2),
         new AlgoEntry("merge", "Merge Sort", "sort","O(n log n)", Theme.ACCENT5),
         new AlgoEntry("quick", "Quick Sort", "sort","O(n log n)", Theme.ACCENT5),
         new AlgoEntry("heap", "Heap Sort","sort", "O(n log n)", Theme.ACCENT5),
