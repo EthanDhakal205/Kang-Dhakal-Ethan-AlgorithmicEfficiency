@@ -1665,9 +1665,8 @@ public class AlgorithmGUI extends JFrame {
 
             for (int i = 0; i < textStr.length(); i++) {
                 int x = startX + i * (cellW + gap);
-                int currentIndex = i;
                 if (x + cellW > w - 8) break;
-                boolean isMatch   = strMatches.stream().anyMatch(m -> currentIndex >= m && currentIndex < m + patStr.length());
+                boolean isMatch   = strMatches.stream().anyMatch(m -> i >= m && i < m + patStr.length());
                 boolean isCurrent = (i == textI);
                 Color bg2 = isMatch ? CELL_FOUND : isCurrent ? CELL_CHECK : CELL_DEF;
                 Color bc  = isMatch ? ACCENT2    : isCurrent ? WARN       : BORDER;
