@@ -181,7 +181,8 @@ public class InfoPanel extends JPanel {
                     curY += lineH;
                     if (curY > y + maxH) return;
                     line = new StringBuilder(word);
-                } else {
+                } 
+                else {
                     g2.drawString(word, x, curY);
                     curY += lineH;
                     if (curY > y + maxH) return;
