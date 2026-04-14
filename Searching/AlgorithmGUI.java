@@ -85,6 +85,7 @@ public class AlgorithmGUI extends JFrame {
 
     // ── swing refs ────────────────────────────────────────────
     private VisualizerPanel vizPanel;
+    private JScrollPane     vizScroll;
     private JLabel  statusLabel, cmpLabel, timeLabel, resultLabel, algoLabel;
     private JSlider speedSlider;
     private JButton runBtn, resetBtn, codeBtn, appsBtn;
@@ -633,7 +634,13 @@ public class AlgorithmGUI extends JFrame {
         center.add(inputPanel, BorderLayout.NORTH);
 
         vizPanel = new VisualizerPanel();
-        center.add(vizPanel, BorderLayout.CENTER);
+        vizScroll = new JScrollPane(vizPanel);
+        vizScroll.setBorder(null);
+        vizScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        vizScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        vizScroll.getViewport().setBackground(BG);
+        vizScroll.getVerticalScrollBar().setUnitIncrement(20);
+        center.add(vizScroll, BorderLayout.CENTER);
         return center;
     }
 
@@ -1317,7 +1324,22 @@ public class AlgorithmGUI extends JFrame {
         Set<String>   graphPath    = new HashSet<>();
         List<String>  graphPathList = null;
 
-        VisualizerPanel() { setBackground(BG); setPreferredSize(new Dimension(800, 430)); }
+        VisualizerPanel() { setBackground(BG); }
+
+        @Override
+        public Dimension getPreferredSize() {
+            if (!mode.equals("array") || currentArray == null || currentArray.length == 0) {
+                return new Dimension(800, 430);
+            }
+            int w = (vizScroll != null) ? vizScroll.getViewport().getWidth() : 800;
+            if (w <= 0) w = 800;
+            int cellW = 56, gap = 6, sidePad = 24;
+            int perRow = Math.max(1, (w - sidePad * 2 + gap) / (cellW + gap));
+            int numRows = (currentArray.length + perRow - 1) / perRow;
+            int rowH = 160;
+            int totalH = Math.max(430, numRows * rowH + 80);
+            return new Dimension(w, totalH);
+        }
 
         void setStringState(String t, String p, int ti, int pj, List<Integer> matches) {
             textStr = t; patStr = p; textI = ti; patJ = pj;
@@ -1348,11 +1370,15 @@ public class AlgorithmGUI extends JFrame {
         // ─────────────────────────────────────────────────────
         private void drawCaption(Graphics2D g2) {
             if (captionText.isEmpty()) return;
-            int w = getWidth(), h = getHeight();
+            int w = getWidth();
+            // Anchor caption to visible viewport, not full panel height
+            Rectangle vis = getVisibleRect();
+            int visH   = vis.height > 0 ? vis.height : getHeight();
+            int visTop = vis.y;
             g2.setFont(CAP_F);
             FontMetrics fm = g2.getFontMetrics();
             int tw  = fm.stringWidth(captionText);
-            int pad = 14, halfH = fm.getHeight() / 2 + 6;
+            int pad = 14;
 
             // alpha: ease-in on phase 1, full on phase 2, ease-out on phase 3
             float alpha;
@@ -1373,7 +1399,7 @@ public class AlgorithmGUI extends JFrame {
             float clampedAlpha = Math.max(0f, Math.min(1f, alpha));
             if (clampedAlpha < 0.02f) return;
 
-            int restingY = h - 24;
+            int restingY = visTop + visH - 24;
             int cy = (int)(restingY + slideY);
             int cx = (w - tw) / 2;
 
@@ -1406,21 +1432,28 @@ public class AlgorithmGUI extends JFrame {
         }
 
         // ─────────────────────────────────────────────────────
-        //  ARRAY — animated bars with per-cell lerp
+        //  ARRAY — multi-row animated bar chart
         // ─────────────────────────────────────────────────────
         private void drawArray(Graphics2D g2) {
             if (currentArray == null || currentArray.length == 0) return;
-            int n = currentArray.length, w = getWidth(), h = getHeight();
-            int cellW = Math.min(72, (w - 48) / n);
-            int gap = 6;
-            int totalW = n * cellW + (n - 1) * gap;
-            int startX = (w - totalW) / 2;
-            int baseY  = h - 50;
-            int topPad = 60;
-            int barArea = baseY - topPad;
-            int minBarH = 28;
+            int n   = currentArray.length;
+            int w   = getWidth();
 
-            // compute numeric range for bar scaling
+            // fixed cell geometry
+            final int CELL_W  = 56;
+            final int GAP     = 6;
+            final int SIDE    = 24;   // left/right padding
+            final int ROW_BAR = 100;  // bar area height per row
+            final int ROW_PAD = 60;   // space below bars (label + gap)
+            final int ROW_H   = ROW_BAR + ROW_PAD;
+            final int TOP_PAD = 20;   // top padding
+
+            // how many cells fit per row
+            int usableW = Math.max(CELL_W + GAP, w - SIDE * 2);
+            int perRow  = (usableW + GAP) / (CELL_W + GAP);
+            int numRows = (n + perRow - 1) / perRow;
+
+            // numeric range for bar scaling (global across all rows)
             double minVal = Double.MAX_VALUE, maxVal = -Double.MAX_VALUE;
             boolean allNum = true;
             for (Object o : currentArray) {
@@ -1430,109 +1463,108 @@ public class AlgorithmGUI extends JFrame {
                     if (v > maxVal) maxVal = v;
                 } else { allNum = false; }
             }
-            double range = (maxVal == minVal) ? 1.0 : maxVal - minVal;
+            double range  = (maxVal == minVal) ? 1.0 : maxVal - minVal;
+            int    minBarH = 22;
 
-            for (int i = 0; i < n; i++) {
-                int x     = startX + i * (cellW + gap);
-                int state = (cellStates    != null && i < cellStates.length)    ? cellStates[i]    : 0;
-                float anim = (cellAnim    != null && i < cellAnim.length)       ? cellAnim[i]      : 0f;
-                int   as   = (cellAnimState != null && i < cellAnimState.length) ? cellAnimState[i] : 0;
+            // draw row by row
+            for (int row = 0; row < numRows; row++) {
+                int startIdx = row * perRow;
+                int endIdx   = Math.min(startIdx + perRow, n);
+                int rowCount = endIdx - startIdx;
 
-                // static bar height from value
-                int barH = allNum
-                    ? minBarH + (int)(((((Number)currentArray[i]).doubleValue() - minVal) / range) * (barArea - minBarH))
-                    : barArea / 2;
+                // center this row
+                int totalW = rowCount * CELL_W + (rowCount - 1) * GAP;
+                int startX = (w - totalW) / 2;
+                int baseY  = TOP_PAD + (row + 1) * ROW_H - ROW_PAD + 10;  // baseline for this row
 
-                // animated scale — active cell grows by up to 8%, found by 4%
-                float scaleBoost = 0f;
-                if (as == 2) scaleBoost = 0.08f * anim;
-                else if (as == 3) scaleBoost = 0.04f;
-                int animBarH = (int)(barH * (1f + scaleBoost));
-                int barY = baseY - animBarH;
-
-                // colour interpolation
-                Color baseColor;
-                Color borderColor;
-                if (as == 2) {
-                    baseColor   = lerpColor(CELL_DEF, CELL_CHECK, anim);
-                    borderColor = lerpColor(BORDER,   WARN,        anim);
-                } else if (as == 3) {
-                    baseColor   = lerpColor(CELL_CHECK, CELL_FOUND, anim);
-                    borderColor = lerpColor(WARN,       ACCENT2,    anim);
-                } else if (state == 1) {
-                    baseColor   = CELL_SCAN;
-                    borderColor = BORDER;
-                } else {
-                    baseColor   = CELL_DEF;
-                    borderColor = BORDER;
+                // row divider line (except first row)
+                if (row > 0) {
+                    g2.setColor(BORDER);
+                    g2.setStroke(new BasicStroke(0.5f));
+                    g2.drawLine(SIDE, TOP_PAD + row * ROW_H - 8,
+                                w - SIDE, TOP_PAD + row * ROW_H - 8);
                 }
 
-                // glow rim on active/found
-                if (as == 2 || as == 3) {
-                    Color glow = as == 3 ? ACCENT2 : WARN;
-                    int glowAlpha = (int)(60 * anim);
-                    Color glowC = new Color(glow.getRed(), glow.getGreen(), glow.getBlue(), glowAlpha);
-                    g2.setColor(glowC);
-                    g2.fillRoundRect(x - 3, barY - 3, cellW + 6, animBarH + 6, 10, 10);
-                }
+                for (int idx = startIdx; idx < endIdx; idx++) {
+                    int col   = idx - startIdx;
+                    int x     = startX + col * (CELL_W + GAP);
+                    int state = (cellStates    != null && idx < cellStates.length)    ? cellStates[idx]    : 0;
+                    float anim = (cellAnim     != null && idx < cellAnim.length)      ? cellAnim[idx]      : 0f;
+                    int   as   = (cellAnimState != null && idx < cellAnimState.length) ? cellAnimState[idx] : 0;
 
-                g2.setColor(baseColor);
-                g2.fillRoundRect(x, barY, cellW, animBarH, 6, 6);
-                g2.setColor(borderColor);
-                float strokeW = (as == 2 || as == 3) ? 1.5f + anim * 0.5f : 0.5f;
-                g2.setStroke(new BasicStroke(strokeW));
-                g2.drawRoundRect(x, barY, cellW, animBarH, 6, 6);
+                    int barH = allNum
+                        ? minBarH + (int)(((((Number)currentArray[idx]).doubleValue() - minVal) / range) * (ROW_BAR - minBarH))
+                        : ROW_BAR / 2;
 
-                // bright cap line on active bar
-                if ((as == 2 || as == 3) && anim > 0.1f) {
-                    Color capCol = as == 3 ? ACCENT2 : WARN;
-                    float capAlpha = Math.min(1f, anim * 1.5f);
-                    g2.setColor(new Color(capCol.getRed(), capCol.getGreen(), capCol.getBlue(), (int)(255 * capAlpha)));
-                    g2.setStroke(new BasicStroke(2f));
-                    g2.drawLine(x + 4, barY + 1, x + cellW - 4, barY + 1);
-                }
+                    float scaleBoost = (as == 2) ? 0.08f * anim : (as == 3) ? 0.04f : 0f;
+                    int animBarH = (int)(barH * (1f + scaleBoost));
+                    int barY = baseY - animBarH;
 
-                // value label
-                String val = String.valueOf(currentArray[i]);
-                g2.setFont(MONO_B);
-                Color textCol = (as == 3) ? ACCENT2 : (as == 2) ? WARN : TEXT;
-                if (as == 2 || as == 3) {
-                    textCol = lerpColor(TEXT, textCol, anim);
-                }
-                g2.setColor(textCol);
-                FontMetrics fm = g2.getFontMetrics();
-                int tx = x + (cellW - fm.stringWidth(val)) / 2;
-                int ty = (animBarH > fm.getAscent() + 8) ? barY + fm.getAscent() + 4 : barY - 4;
-                g2.drawString(val, tx, ty);
+                    // colour
+                    Color baseColor;
+                    Color borderColor;
+                    if (as == 2) {
+                        baseColor   = lerpColor(CELL_DEF, CELL_CHECK, anim);
+                        borderColor = lerpColor(BORDER,   WARN,        anim);
+                    } else if (as == 3) {
+                        baseColor   = lerpColor(CELL_CHECK, CELL_FOUND, anim);
+                        borderColor = lerpColor(WARN,       ACCENT2,    anim);
+                    } else if (state == 1) {
+                        baseColor   = CELL_SCAN;
+                        borderColor = BORDER;
+                    } else {
+                        baseColor   = CELL_DEF;
+                        borderColor = BORDER;
+                    }
 
-                // index below baseline
-                g2.setFont(SMALL); g2.setColor(TEXT_HINT);
-                String idx = String.valueOf(i);
-                FontMetrics fm2 = g2.getFontMetrics();
-                g2.drawString(idx, x + (cellW - fm2.stringWidth(idx)) / 2, baseY + 18);
-            }
+                    // glow rim
+                    if ((as == 2 || as == 3) && anim > 0.05f) {
+                        Color glow = as == 3 ? ACCENT2 : WARN;
+                        Color glowC = new Color(glow.getRed(), glow.getGreen(), glow.getBlue(), (int)(55 * anim));
+                        g2.setColor(glowC);
+                        g2.fillRoundRect(x - 3, barY - 3, CELL_W + 6, animBarH + 6, 10, 10);
+                    }
 
-            // pointer arrow above active bars
-            if (cellStates != null && cellAnimState != null) {
-                for (int i = 0; i < cellStates.length; i++) {
-                    int as = cellAnimState[i];
-                    if (as == 2 || as == 3) {
-                        float anim = (cellAnim != null && i < cellAnim.length) ? cellAnim[i] : 1f;
-                        if (anim < 0.1f) continue;
-                        int barH = allNum && currentArray[i] instanceof Number
-                            ? minBarH + (int)(((((Number)currentArray[i]).doubleValue() - minVal) / range) * (barArea - minBarH))
-                            : barArea / 2;
-                        float scaleBoost = (as == 2) ? 0.08f * anim : 0.04f;
-                        int animBarH = (int)(barH * (1f + scaleBoost));
-                        int barY = baseY - animBarH;
-                        int cx2  = startX + i * (cellW + gap) + cellW / 2;
-                        Color ac = (as == 3) ? ACCENT2 : WARN;
-                        float arrowAlpha = Math.min(1f, anim * 1.5f);
-                        g2.setColor(new Color(ac.getRed(), ac.getGreen(), ac.getBlue(), (int)(255 * arrowAlpha)));
+                    g2.setColor(baseColor);
+                    g2.fillRoundRect(x, barY, CELL_W, animBarH, 6, 6);
+                    g2.setColor(borderColor);
+                    g2.setStroke(new BasicStroke((as == 2 || as == 3) ? 1.5f + anim * 0.5f : 0.5f));
+                    g2.drawRoundRect(x, barY, CELL_W, animBarH, 6, 6);
+
+                    // cap glow line
+                    if ((as == 2 || as == 3) && anim > 0.1f) {
+                        Color cap = as == 3 ? ACCENT2 : WARN;
+                        g2.setColor(new Color(cap.getRed(), cap.getGreen(), cap.getBlue(),
+                                              (int)(255 * Math.min(1f, anim * 1.5f))));
                         g2.setStroke(new BasicStroke(2f));
-                        g2.drawLine(cx2, barY - 6, cx2, barY - 20);
-                        int[] px = {cx2 - 5, cx2 + 5, cx2};
-                        int[] py = {barY - 18, barY - 18, barY - 6};
+                        g2.drawLine(x + 4, barY + 1, x + CELL_W - 4, barY + 1);
+                    }
+
+                    // value label
+                    String val = String.valueOf(currentArray[idx]);
+                    g2.setFont(MONO_B);
+                    Color textCol = (as == 2 || as == 3) ? lerpColor(TEXT, as == 3 ? ACCENT2 : WARN, anim) : TEXT;
+                    g2.setColor(textCol);
+                    FontMetrics fm = g2.getFontMetrics();
+                    int tx = x + (CELL_W - fm.stringWidth(val)) / 2;
+                    int ty = (animBarH > fm.getAscent() + 8) ? barY + fm.getAscent() + 4 : barY - 4;
+                    g2.drawString(val, tx, ty);
+
+                    // index label below baseline
+                    g2.setFont(SMALL); g2.setColor(TEXT_HINT);
+                    String idxStr = String.valueOf(idx);
+                    FontMetrics fm2 = g2.getFontMetrics();
+                    g2.drawString(idxStr, x + (CELL_W - fm2.stringWidth(idxStr)) / 2, baseY + 16);
+
+                    // pointer arrow above active bar
+                    if ((as == 2 || as == 3) && anim >= 0.1f) {
+                        Color ac = (as == 3) ? ACCENT2 : WARN;
+                        g2.setColor(new Color(ac.getRed(), ac.getGreen(), ac.getBlue(),
+                                              (int)(255 * Math.min(1f, anim * 1.5f))));
+                        g2.setStroke(new BasicStroke(2f));
+                        g2.drawLine(x + CELL_W / 2, barY - 5, x + CELL_W / 2, barY - 18);
+                        int[] px = {x + CELL_W / 2 - 5, x + CELL_W / 2 + 5, x + CELL_W / 2};
+                        int[] py = {barY - 16, barY - 16, barY - 5};
                         g2.fillPolygon(px, py, 3);
                     }
                 }
@@ -1762,6 +1794,7 @@ public class AlgorithmGUI extends JFrame {
         if (cmpLabel    != null) cmpLabel.setText("comparisons: —");
         if (timeLabel   != null) timeLabel.setText("time: —");
         if (resultLabel != null) resultLabel.setText("result: —");
+        vizPanel.revalidate();
         vizPanel.repaint();
     }
 
