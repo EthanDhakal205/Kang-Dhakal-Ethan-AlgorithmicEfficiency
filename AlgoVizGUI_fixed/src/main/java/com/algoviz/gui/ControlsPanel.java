@@ -76,7 +76,7 @@ public class ControlsPanel extends JPanel {
         add(targetField);
         add(Box.createHorizontalStrut(4));
         add(btnRandom);
-        add(btnRun);
+        add(btnRun); 
         add(btnStep);
         add(btnReset);
     }
