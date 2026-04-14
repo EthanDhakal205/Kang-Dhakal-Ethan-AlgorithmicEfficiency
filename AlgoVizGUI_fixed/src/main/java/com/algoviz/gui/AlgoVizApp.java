@@ -1,99 +1,167 @@
 package com.algoviz.gui;
 
-import com.algoviz.algorithms.searching.*;
-import com.algoviz.algorithms.sorting.*;
+import com.algoviz.algorithms.searching.BinarySearch;
+import com.algoviz.algorithms.searching.ExponentialSearch;
+import com.algoviz.algorithms.searching.FibonacciSearch;
+import com.algoviz.algorithms.searching.InterpolationSearch;
+import com.algoviz.algorithms.searching.JumpSearch;
+import com.algoviz.algorithms.searching.LinearSearch;
+import com.algoviz.algorithms.searching.TernarySearch;
+import com.algoviz.algorithms.sorting.BogoSort;
+import com.algoviz.algorithms.sorting.BubbleSort;
+import com.algoviz.algorithms.sorting.GnomeSort;
+import com.algoviz.algorithms.sorting.HeapSort;
+import com.algoviz.algorithms.sorting.InsertionSort;
+import com.algoviz.algorithms.sorting.MergeSort;
+import com.algoviz.algorithms.sorting.QuickSort;
+import com.algoviz.algorithms.sorting.RadixSort;
+import com.algoviz.algorithms.sorting.SelectionSort;
 import com.algoviz.algorithms.sorting.TimSort;
 import com.algoviz.models.AlgoResult;
 import com.algoviz.models.AlgoStep;
+
 import javax.swing.*;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
-/**
- * AlgoVizApp — main JFrame and application controller.
- * Wires all panels together and manages playback state.
- * Entry point: main()
- */
 public class AlgoVizApp extends JFrame {
 
-    // PANELS
+    private enum WorkspaceMode {
+        VISUALIZER,
+        PRACTICE
+    }
+
     private final SidebarPanel sidebar;
     private final TopbarPanel topbar;
     private final ControlsPanel controls;
+    private final SpeedControlPanel speedControl;
     private final BarChartPanel barChart;
     private final StatsPanel stats;
     private final PlaybackPanel playback;
     private final InfoPanel info;
+    private final PracticePanel practice;
+    private final JPanel workspaceCards;
+    private final ControlsPanel.StyledButton visualizerModeButton;
+    private final ControlsPanel.StyledButton practiceModeButton;
 
-    //PLAYBACK STATE
+    private WorkspaceMode activeMode = WorkspaceMode.VISUALIZER;
     private List<AlgoStep> steps = new ArrayList<>();
     private int currentStep = 0;
     private boolean playing = false;
     private Timer playTimer;
 
-    // ── ALGORITHM METADATA ────────────────────────────────────────────────
     private record AlgoMeta(String name, String cat, boolean stable, boolean inPlace,
-                             String best, String avg, String worst, String space, String desc) {}
-
-    private static final Map<String, AlgoMeta> META = new LinkedHashMap<>();
-    static {
-        META.put("bubble", new AlgoMeta("Bubble Sort","sort",true,true,"O(n)","O(n²)","O(n²)","O(1)", "Repeatedly compares adjacent elements and swaps if out of order. Optimized with early exit if no swaps occur. The classic first algorithm everyone learns."));
-        META.put("insertion", new AlgoMeta("Insertion Sort", "sort", true,  true,  "O(n)",  "O(n²)","O(n²)","O(1)","Builds a sorted region one element at a time. Very fast on small or nearly-sorted arrays. Used as a subroutine inside Tim Sort."));
-        META.put("selection",new AlgoMeta("Selection Sort", "sort", false, true,  "O(n²)",  "O(n²)","O(n²)","O(1)","Repeatedly finds the minimum of the unsorted region and places it at the front. Always O(n²). Makes exactly n-1 swaps total."));
-        META.put("gnome",new AlgoMeta("Gnome Sort \uD83C\uDF3F","sort",true,  true,  "O(n)", "O(n²)", "O(n²)","O(1)","Named after a Dutch garden gnome sorting flower pots! Walks forward comparing pairs, swaps when out of order and steps back. Equivalent to insertion sort."));
-        META.put("bogo",new AlgoMeta("Bogo Sort \uD83D\uDC80","sort", false, true,  "O(n)", "O((n+1)!)",   "O(\u221E)",  "O(1)","Randomly shuffles and checks if sorted. Repeats until done. Average case for 10 elements: ~3.6 million shuffles. Included for educational horror only."));
-        META.put("merge",new AlgoMeta("Merge Sort", "sort",true, false, "O(n log n)", "O(n log n)",  "O(n log n)", "O(n)", "Divide-and-conquer: splits in half recursively, sorts each half, merges back. Guarantees O(n log n) in ALL cases. Used for external sorting and linked lists."));
-        META.put("quick", new AlgoMeta("Quick Sort", "sort", false, true,  "O(n log n)", "O(n log n)",  "O(n²)", "O(log n)","Selects a pivot and partitions around it. Fastest in practice for average cases due to excellent cache locality. Java uses dual-pivot QuickSort for primitives."));
-        META.put("heap",new AlgoMeta("Heap Sort", "sort", false, true,  "O(n log n)", "O(n log n)",  "O(n log n)", "O(1)", "Builds a max-heap then extracts elements in order. Guaranteed O(n log n) with O(1) space. Slower than Quick Sort in practice due to poor cache locality."));
-        META.put("tim", new AlgoMeta("Tim Sort \u2B50", "sort", true,  false, "O(n)", "O(n log n)",  "O(n log n)", "O(n)", "The actual algorithm used by Java (Arrays.sort for objects) and Python (list.sort). Hybrid of Merge + Insertion Sort. Exploits natural runs in data for O(n) best case."));
-        META.put("radix", new AlgoMeta("Radix Sort", "sort", true,  false, "O(n)",  "O(nk)", "O(nk)", "O(n+k)","Non-comparison sort — processes digits LSD to MSD. Can beat O(n log n) theoretical limit for fixed-width integers. Zero comparisons made."));
-        META.put("linear", new AlgoMeta("Linear Search","search", true, true,  "O(1)", "O(n)", "O(n)",  "O(1)", "Checks every element one by one. Works on any array — sorted or not. The most reliable baseline. Optimal for unsorted data."));
-        META.put("binary",new AlgoMeta("Binary Search", "search", true, true,  "O(1)", "O(log n)","O(log n)", "O(1)",  "Halves the search space each comparison. 1 million elements needs \u226420 comparisons. 1 billion needs \u226430. Requires sorted array."));
-        META.put("jump", new AlgoMeta("Jump Search", "search", true,  true,  "O(1)",  "O(\u221An)","O(\u221An)", "O(1)", "Jumps \u221An elements at a time until overshooting, then linear searches back. Great middle ground between linear and binary search."));
-        META.put("interpolation",new AlgoMeta("Interpolation Search", "search", true, true,  "O(1)", "O(log log n)","O(n)",  "O(1)", "Estimates WHERE the target is using value interpolation — like opening a dictionary near 'M' for a word starting with M. O(log log n) for uniform data."));
-        META.put("exponential", new AlgoMeta("Exponential Search",   "search", true, true, "O(1)","O(log n)", "O(log n)", "O(1)", "Doubles the search index (1,2,4,8,16...) until overshoot, then binary searches that range. Ideal for unbounded or infinite sorted arrays."));
-        META.put("fibonacci", new AlgoMeta("Fibonacci Search \uD83C\uDF00","search",true,true,"O(1)","O(log n)","O(log n)","O(1)","Uses Fibonacci numbers as division points. Only addition and subtraction — no division. Better cache performance on some architectures."));
-        META.put("ternary",  new AlgoMeta("Ternary Search", "search", true,  true,  "O(1)", "O(log\u2083n)","O(log\u2083n)","O(1)", "Divides into 3 sections using 2 midpoints. Counterintuitive result: makes MORE comparisons than binary (2 per round vs ~1.5). More splits \u2260 fewer comparisons."));
+                            String best, String avg, String worst, String space, String desc) {
     }
 
+    private static final Map<String, AlgoMeta> META = new LinkedHashMap<>();
 
+    static {
+        META.put("bubble", new AlgoMeta("Bubble Sort", "sort", true, true,
+                "O(n)", "O(n^2)", "O(n^2)", "O(1)",
+                "Repeatedly compares adjacent values and swaps them when they are out of order."));
+        META.put("insertion", new AlgoMeta("Insertion Sort", "sort", true, true,
+                "O(n)", "O(n^2)", "O(n^2)", "O(1)",
+                "Builds a sorted prefix one item at a time. Strong on small or nearly sorted arrays."));
+        META.put("selection", new AlgoMeta("Selection Sort", "sort", false, true,
+                "O(n^2)", "O(n^2)", "O(n^2)", "O(1)",
+                "Finds the minimum remaining value on each pass and places it at the front."));
+        META.put("gnome", new AlgoMeta("Gnome Sort", "sort", true, true,
+                "O(n)", "O(n^2)", "O(n^2)", "O(1)",
+                "Walks forward and backward through the array, swapping adjacent values when needed."));
+        META.put("bogo", new AlgoMeta("Bogo Sort", "sort", false, true,
+                "O(n)", "O((n+1)!)", "O(infinity)", "O(1)",
+                "Randomly shuffles until the data happens to be sorted. Included only as a cautionary example."));
+        META.put("merge", new AlgoMeta("Merge Sort", "sort", true, false,
+                "O(n log n)", "O(n log n)", "O(n log n)", "O(n)",
+                "Splits the array recursively and merges sorted halves back together."));
+        META.put("quick", new AlgoMeta("Quick Sort", "sort", false, true,
+                "O(n log n)", "O(n log n)", "O(n^2)", "O(log n)",
+                "Partitions around a pivot and sorts each side recursively. Fast in practice."));
+        META.put("heap", new AlgoMeta("Heap Sort", "sort", false, true,
+                "O(n log n)", "O(n log n)", "O(n log n)", "O(1)",
+                "Builds a heap and repeatedly removes the maximum element."));
+        META.put("tim", new AlgoMeta("Tim Sort", "sort", true, false,
+                "O(n)", "O(n log n)", "O(n log n)", "O(n)",
+                "Hybrid of merge and insertion sort used widely in production runtimes."));
+        META.put("radix", new AlgoMeta("Radix Sort", "sort", true, false,
+                "O(n)", "O(nk)", "O(nk)", "O(n+k)",
+                "Non-comparison sort that groups values by digit positions."));
+        META.put("linear", new AlgoMeta("Linear Search", "search", true, true,
+                "O(1)", "O(n)", "O(n)", "O(1)",
+                "Checks every element in order. Works on unsorted input."));
+        META.put("binary", new AlgoMeta("Binary Search", "search", true, true,
+                "O(1)", "O(log n)", "O(log n)", "O(1)",
+                "Halves the search space each comparison. Requires sorted data."));
+        META.put("jump", new AlgoMeta("Jump Search", "search", true, true,
+                "O(1)", "O(sqrt n)", "O(sqrt n)", "O(1)",
+                "Jumps ahead in blocks and then scans the likely range."));
+        META.put("interpolation", new AlgoMeta("Interpolation Search", "search", true, true,
+                "O(1)", "O(log log n)", "O(n)", "O(1)",
+                "Estimates the target position by value and works best on uniform data."));
+        META.put("exponential", new AlgoMeta("Exponential Search", "search", true, true,
+                "O(1)", "O(log n)", "O(log n)", "O(1)",
+                "Expands the search window exponentially before using binary search."));
+        META.put("fibonacci", new AlgoMeta("Fibonacci Search", "search", true, true,
+                "O(1)", "O(log n)", "O(log n)", "O(1)",
+                "Uses Fibonacci offsets instead of midpoint division."));
+        META.put("ternary", new AlgoMeta("Ternary Search", "search", true, true,
+                "O(1)", "O(log_3 n)", "O(log_3 n)", "O(1)",
+                "Splits the search range into three sections using two midpoints."));
+    }
 
     public AlgoVizApp() {
-        super("AlgoViz — Algorithm Visualizer");
+        super("AlgoViz - Algorithm Visualizer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setMinimumSize(new Dimension(1100, 750));
         setPreferredSize(new Dimension(1280, 820));
         getContentPane().setBackground(Theme.BG);
 
-        // Build panels
         sidebar = new SidebarPanel(this::onAlgoSelected);
         topbar = new TopbarPanel();
         controls = new ControlsPanel();
+        speedControl = new SpeedControlPanel();
         barChart = new BarChartPanel();
         stats = new StatsPanel();
         playback = new PlaybackPanel(new PlaybackPanel.PlaybackListener() {
-            @Override public void onFirst()  { goFirst(); }
+            @Override public void onFirst() { goFirst(); }
             @Override public void onPrev() { stepBack(); }
             @Override public void onPlayPause() { togglePlay(); }
             @Override public void onNext() { stepForward(); }
             @Override public void onLast() { goLast(); }
         });
         info = new InfoPanel();
+        practice = new PracticePanel();
+        visualizerModeButton = createModeButton("VISUALIZER", Theme.ACCENT, WorkspaceMode.VISUALIZER);
+        practiceModeButton = createModeButton("PRACTICE LAB", Theme.ACCENT5, WorkspaceMode.PRACTICE);
+        workspaceCards = buildWorkspaceCards();
 
         controls.setListener(new ControlsPanel.ControlListener() {
-            @Override public void onRun(String array, int target)  { run(array, target); }
-            @Override public void onStep()  { if (steps.isEmpty()) run(controls.getArrayText(), controls.getTarget()); else stepForward(); }
+            @Override public void onRun(String array, int target) { run(array, target); }
+            @Override public void onStep() {
+                if (steps.isEmpty()) {
+                    run(controls.getArrayText(), controls.getTarget());
+                } else {
+                    stepForward();
+                }
+            }
             @Override public void onRandom() { generateRandom(); }
-            @Override public void onReset()  { reset(); }
+            @Override public void onReset() { reset(); }
         });
 
-        // Layout
         JScrollPane sidebarScroll = new JScrollPane(sidebar,
-        JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         sidebarScroll.setBorder(null);
         sidebarScroll.getVerticalScrollBar().setUnitIncrement(16);
         sidebarScroll.setBackground(Theme.BG2);
@@ -110,125 +178,216 @@ public class AlgoVizApp extends JFrame {
         setContentPane(splitPane);
         setupKeyBindings();
 
-        // Initialize with bubble sort
         updateTopbar("bubble");
         info.update("bubble", "sort", META.get("bubble").desc());
+        practice.setAlgorithm("bubble");
+        switchMode(WorkspaceMode.VISUALIZER);
 
         pack();
         setLocationRelativeTo(null);
     }
 
     private JPanel buildMainArea() {
-        JPanel main = new JPanel();
+        JPanel main = new JPanel(new BorderLayout());
         main.setBackground(Theme.BG);
-        main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
 
-        // Topbar
+        JPanel headerStack = new JPanel();
+        headerStack.setBackground(Theme.BG);
+        headerStack.setLayout(new BoxLayout(headerStack, BoxLayout.Y_AXIS));
+
         topbar.setAlignmentX(Component.LEFT_ALIGNMENT);
         topbar.setMaximumSize(new Dimension(Integer.MAX_VALUE, Theme.TOPBAR_H));
-        main.add(topbar);
+        headerStack.add(topbar);
+        headerStack.add(buildModeBar());
 
-        // Controls
+        main.add(headerStack, BorderLayout.NORTH);
+        main.add(workspaceCards, BorderLayout.CENTER);
+        return main;
+    }
+
+    private JPanel buildModeBar() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(Theme.BG3);
+        bar.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        left.setOpaque(false);
+        JLabel label = new JLabel("VIEW");
+        label.setFont(Theme.FONT_LABEL);
+        label.setForeground(Theme.TEXT2);
+        left.add(label);
+        left.add(visualizerModeButton);
+        left.add(practiceModeButton);
+        bar.add(left, BorderLayout.WEST);
+
+        JLabel hint = new JLabel("Practice Lab opens a full compiler workspace");
+        hint.setFont(Theme.FONT_LABEL);
+        hint.setForeground(Theme.TEXT3);
+        bar.add(hint, BorderLayout.EAST);
+        return bar;
+    }
+
+    private ControlsPanel.StyledButton createModeButton(String text, Color accent, WorkspaceMode mode) {
+        ControlsPanel.StyledButton button = new ControlsPanel.StyledButton(text, accent, Theme.BG3);
+        button.setPreferredSize(new Dimension(text.equals("PRACTICE LAB") ? 150 : 124, 32));
+        button.addActionListener(e -> switchMode(mode));
+        return button;
+    }
+
+    private JPanel buildWorkspaceCards() {
+        JPanel cards = new JPanel(new CardLayout());
+        cards.setBackground(Theme.BG);
+        cards.add(buildVisualizerWorkspace(), WorkspaceMode.VISUALIZER.name());
+        cards.add(buildPracticeWorkspace(), WorkspaceMode.PRACTICE.name());
+        return cards;
+    }
+
+    private JPanel buildVisualizerWorkspace() {
+        JPanel panel = new JPanel();
+        panel.setBackground(Theme.BG);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        speedControl.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(speedControl);
+
         controls.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(controls);
+        panel.add(controls);
 
-        // Bar chart — takes up most space
         barChart.setAlignmentX(Component.LEFT_ALIGNMENT);
         JPanel chartWrapper = new JPanel(new BorderLayout());
         chartWrapper.setBackground(Theme.BG);
         chartWrapper.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
         chartWrapper.add(barChart, BorderLayout.CENTER);
         chartWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(chartWrapper);
+        panel.add(chartWrapper);
 
-        // Stats
         stats.setAlignmentX(Component.LEFT_ALIGNMENT);
         JPanel statsWrapper = new JPanel(new BorderLayout());
         statsWrapper.setBackground(Theme.BG);
         statsWrapper.setBorder(BorderFactory.createEmptyBorder(8, 10, 0, 10));
         statsWrapper.add(stats, BorderLayout.CENTER);
         statsWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(statsWrapper);
+        panel.add(statsWrapper);
 
-        // Playback controls
         playback.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(playback);
+        panel.add(playback);
 
-        // Info panel
         info.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(info);
+        panel.add(info);
+        return panel;
+    }
 
-        return main;
+    private JPanel buildPracticeWorkspace() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Theme.BG);
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panel.add(practice, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void switchMode(WorkspaceMode mode) {
+        activeMode = mode;
+        if (mode == WorkspaceMode.PRACTICE) {
+            stopPlay();
+        }
+
+        CardLayout layout = (CardLayout) workspaceCards.getLayout();
+        layout.show(workspaceCards, mode.name());
+        setModeButtonState(visualizerModeButton, Theme.ACCENT, mode == WorkspaceMode.VISUALIZER);
+        setModeButtonState(practiceModeButton, Theme.ACCENT5, mode == WorkspaceMode.PRACTICE);
+
+        if (mode == WorkspaceMode.PRACTICE) {
+            practice.focusEditor();
+        }
+
+        workspaceCards.revalidate();
+        workspaceCards.repaint();
+    }
+
+    private void setModeButtonState(ControlsPanel.StyledButton button, Color accent, boolean selected) {
+        button.setForeground(selected ? Theme.BG : accent);
     }
 
     private void onAlgoSelected(String id, String cat) {
         reset();
         updateTopbar(id);
         controls.setSearchMode(cat.equals("search"));
-        AlgoMeta m = META.get(id);
-        if (m != null) info.update(id, cat, m.desc());
-        // Auto-run with current array
-        run(controls.getArrayText(), controls.getTarget());
+        AlgoMeta meta = META.get(id);
+        if (meta != null) {
+            info.update(id, cat, meta.desc());
+        }
+        practice.setAlgorithm(id);
+        if (activeMode == WorkspaceMode.VISUALIZER) {
+            run(controls.getArrayText(), controls.getTarget());
+        }
     }
 
     private void run(String arrayStr, int target) {
         stopPlay();
         int[] arr = parseArray(arrayStr);
         if (arr == null || arr.length == 0) {
-            showError("Invalid array. Use comma-separated integers, e.g. 64,34,25,12");
+            showError("Invalid array. Use comma-separated integers, for example 64,34,25,12");
             return;
         }
 
-        String id  = sidebar.getSelectedId();
+        String id = sidebar.getSelectedId();
         AlgoResult result = dispatch(id, arr, target);
-        if (result == null) return;
+        if (result == null) {
+            return;
+        }
 
         steps = result.getSteps();
         currentStep = 0;
         renderStep(0);
-
-        // Start playing automatically
         startPlay();
     }
 
     private AlgoResult dispatch(String id, int[] arr, int target) {
         return switch (id) {
-            case "bubble"-> BubbleSort.sort(arr);
+            case "bubble" -> BubbleSort.sort(arr);
             case "insertion" -> InsertionSort.sort(arr);
             case "selection" -> SelectionSort.sort(arr);
             case "gnome" -> GnomeSort.sort(arr);
             case "bogo" -> BogoSort.sort(arr);
-            case "merge"  -> MergeSort.sort(arr);
+            case "merge" -> MergeSort.sort(arr);
             case "quick" -> QuickSort.sort(arr);
             case "heap" -> HeapSort.sort(arr);
             case "tim" -> TimSort.sort(arr);
             case "radix" -> RadixSort.sort(arr);
             case "linear" -> LinearSearch.search(arr, target);
-            case "binary"-> BinarySearch.search(arr, target);
+            case "binary" -> BinarySearch.search(arr, target);
             case "jump" -> JumpSearch.search(arr, target);
             case "interpolation" -> InterpolationSearch.search(arr, target);
             case "exponential" -> ExponentialSearch.search(arr, target);
-            case "fibonacci"-> FibonacciSearch.search(arr, target);
-            case "ternary"-> TernarySearch.search(arr, target);
+            case "fibonacci" -> FibonacciSearch.search(arr, target);
+            case "ternary" -> TernarySearch.search(arr, target);
             default -> null;
         };
     }
 
-    // PLAYBACK
-
     private void startPlay() {
-        if (steps.isEmpty()) return;
-        if (currentStep >= steps.size() - 1) currentStep = 0;
+        if (steps.isEmpty()) {
+            return;
+        }
+        if (currentStep >= steps.size() - 1) {
+            currentStep = 0;
+        }
 
         playing = true;
         playback.setPlaying(true);
 
-        int[] delayMs = {700, 350, 160, 80, 30};
-        int delay = delayMs[Math.min(4, Math.max(0, sidebar.getSpeed() - 1))];
+        int baseDelayMs = 700;
+        int delay = (int) Math.max(25, Math.round(baseDelayMs / speedControl.getSpeedMultiplier()));
 
         playTimer = new Timer(delay, e -> {
-            if (!playing || steps.isEmpty()) { stopPlay(); return; }
-            if (currentStep >= steps.size() - 1) { stopPlay(); return; }
+            if (!playing || steps.isEmpty()) {
+                stopPlay();
+                return;
+            }
+            if (currentStep >= steps.size() - 1) {
+                stopPlay();
+                return;
+            }
             currentStep++;
             renderStep(currentStep);
         });
@@ -237,21 +396,28 @@ public class AlgoVizApp extends JFrame {
 
     private void stopPlay() {
         playing = false;
-        if (playTimer != null) playTimer.stop();
+        if (playTimer != null) {
+            playTimer.stop();
+        }
         playback.setPlaying(false);
     }
 
     private void togglePlay() {
-        if (playing) stopPlay();
-        else {
-            if (steps.isEmpty()) run(controls.getArrayText(), controls.getTarget());
-            else startPlay();
+        if (playing) {
+            stopPlay();
+        } else if (steps.isEmpty()) {
+            run(controls.getArrayText(), controls.getTarget());
+        } else {
+            startPlay();
         }
     }
 
     private void stepForward() {
         stopPlay();
-        if (steps.isEmpty()) { run(controls.getArrayText(), controls.getTarget()); return; }
+        if (steps.isEmpty()) {
+            run(controls.getArrayText(), controls.getTarget());
+            return;
+        }
         if (currentStep < steps.size() - 1) {
             currentStep++;
             renderStep(currentStep);
@@ -268,16 +434,24 @@ public class AlgoVizApp extends JFrame {
 
     private void goFirst() {
         stopPlay();
-        if (!steps.isEmpty()) { currentStep = 0; renderStep(0); }
+        if (!steps.isEmpty()) {
+            currentStep = 0;
+            renderStep(0);
+        }
     }
 
     private void goLast() {
         stopPlay();
-        if (!steps.isEmpty()) { currentStep = steps.size() - 1; renderStep(currentStep); }
+        if (!steps.isEmpty()) {
+            currentStep = steps.size() - 1;
+            renderStep(currentStep);
+        }
     }
 
     private void renderStep(int idx) {
-        if (steps.isEmpty() || idx < 0 || idx >= steps.size()) return;
+        if (steps.isEmpty() || idx < 0 || idx >= steps.size()) {
+            return;
+        }
         AlgoStep step = steps.get(idx);
 
         SwingUtilities.invokeLater(() -> {
@@ -294,52 +468,67 @@ public class AlgoVizApp extends JFrame {
         stats.reset();
     }
 
-    // RANDOM ARRAY 
-
     private void generateRandom() {
         String id = sidebar.getSelectedId();
         int size = id.equals("bogo") ? 6 : 14;
         Random rng = new Random();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         for (int i = 0; i < size; i++) {
-            if (i > 0) sb.append(",");
-            sb.append(rng.nextInt(95) + 5);
+            if (i > 0) {
+                builder.append(',');
+            }
+            builder.append(rng.nextInt(95) + 5);
         }
-        controls.setArrayText(sb.toString());
+        controls.setArrayText(builder.toString());
         reset();
     }
 
-    // TOPBAR UPDATE 
-
     private void updateTopbar(String id) {
-        AlgoMeta m = META.get(id);
-        if (m == null) return;
-        topbar.update(m.name(), m.cat(), m.stable(), m.inPlace(),
-                m.best(), m.avg(), m.worst(), m.space());
+        AlgoMeta meta = META.get(id);
+        if (meta == null) {
+            return;
+        }
+        topbar.update(meta.name(), meta.cat(), meta.stable(), meta.inPlace(),
+                meta.best(), meta.avg(), meta.worst(), meta.space());
     }
-
-    //KEYBOARD SHORTCUTS 
 
     private void setupKeyBindings() {
         JComponent root = (JComponent) getContentPane();
-        InputMap  im = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap am = root.getActionMap();
+        InputMap inputMap = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = root.getActionMap();
 
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0),   "playPause");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "stepFwd");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0),  "stepBck");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0), "first");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0), "last");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "random");
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "run");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "playPause");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "stepFwd");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "stepBack");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_HOME, 0), "first");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_END, 0), "last");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "random");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "run");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK), "showPractice");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "showVisualizer");
 
-        am.put("playPause", action(e -> togglePlay()));
-        am.put("stepFwd", action(e -> stepForward()));
-        am.put("stepBck", action(e -> stepBack()));
-        am.put("first", action(e -> goFirst()));
-        am.put("last",action(e -> goLast()));
-        am.put("random", action(e -> { generateRandom(); run(controls.getArrayText(), controls.getTarget()); }));
-        am.put("run",action(e -> run(controls.getArrayText(), controls.getTarget())));
+        actionMap.put("playPause", action(e -> { if (allowVisualizerHotkeys()) togglePlay(); }));
+        actionMap.put("stepFwd", action(e -> { if (allowVisualizerHotkeys()) stepForward(); }));
+        actionMap.put("stepBack", action(e -> { if (allowVisualizerHotkeys()) stepBack(); }));
+        actionMap.put("first", action(e -> { if (allowVisualizerHotkeys()) goFirst(); }));
+        actionMap.put("last", action(e -> { if (allowVisualizerHotkeys()) goLast(); }));
+        actionMap.put("random", action(e -> {
+            if (allowVisualizerHotkeys()) {
+                generateRandom();
+                run(controls.getArrayText(), controls.getTarget());
+            }
+        }));
+        actionMap.put("run", action(e -> { if (allowVisualizerHotkeys()) run(controls.getArrayText(), controls.getTarget()); }));
+        actionMap.put("showPractice", action(e -> switchMode(WorkspaceMode.PRACTICE)));
+        actionMap.put("showVisualizer", action(e -> switchMode(WorkspaceMode.VISUALIZER)));
+    }
+
+    private boolean allowVisualizerHotkeys() {
+        if (activeMode != WorkspaceMode.VISUALIZER) {
+            return false;
+        }
+        Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        return !(focusOwner instanceof JTextComponent);
     }
 
     private AbstractAction action(java.util.function.Consumer<ActionEvent> handler) {
@@ -348,14 +537,16 @@ public class AlgoVizApp extends JFrame {
         };
     }
 
-    // UTILITIES
-
     private int[] parseArray(String input) {
-        if (input == null || input.isBlank()) return null;
+        if (input == null || input.isBlank()) {
+            return null;
+        }
         try {
             String[] parts = input.split(",");
             int[] arr = new int[parts.length];
-            for (int i = 0; i < parts.length; i++) arr[i] = Integer.parseInt(parts[i].trim());
+            for (int i = 0; i < parts.length; i++) {
+                arr[i] = Integer.parseInt(parts[i].trim());
+            }
             return arr;
         } catch (NumberFormatException e) {
             return null;
@@ -366,23 +557,24 @@ public class AlgoVizApp extends JFrame {
         JOptionPane.showMessageDialog(this, msg, "Invalid Input", JOptionPane.WARNING_MESSAGE);
     }
 
-    // ENTRY POINT 
-
     public static void main(String[] args) {
-        // Apply FlatLaf dark theme as base (we override most painting anyway)
         try {
-            UIManager.put("Panel.background",         Theme.BG);
-            UIManager.put("OptionPane.background",    Theme.BG2);
+            UIManager.put("Panel.background", Theme.BG);
+            UIManager.put("OptionPane.background", Theme.BG2);
             UIManager.put("OptionPane.messageForeground", Theme.TEXT);
-            UIManager.put("Button.background",        Theme.SURFACE);
-            UIManager.put("Button.foreground",        Theme.TEXT);
-            UIManager.put("TextField.background",     Theme.SURFACE);
-            UIManager.put("TextField.foreground",     Theme.TEXT);
-            UIManager.put("TextField.caretForeground",Theme.ACCENT);
-            UIManager.put("SplitPane.background",     Theme.BG2);
-            UIManager.put("SplitPane.dividerSize",    1);
-        } catch (Exception e) {
-            // Fallback - still works without FlatLaf
+            UIManager.put("Button.background", Theme.SURFACE);
+            UIManager.put("Button.foreground", Theme.TEXT);
+            UIManager.put("TextField.background", Theme.SURFACE);
+            UIManager.put("TextField.foreground", Theme.TEXT);
+            UIManager.put("TextField.caretForeground", Theme.ACCENT);
+            UIManager.put("SplitPane.background", Theme.BG2);
+            UIManager.put("SplitPane.dividerSize", 1);
+            UIManager.put("TabbedPane.background", Theme.BG3);
+            UIManager.put("TabbedPane.foreground", Theme.TEXT);
+            UIManager.put("TabbedPane.selectedBackground", Theme.BG2);
+            UIManager.put("TabbedPane.underlineColor", Theme.ACCENT);
+            UIManager.put("TabbedPane.focusColor", Theme.ACCENT);
+        } catch (Exception ignored) {
         }
 
         SwingUtilities.invokeLater(() -> {
