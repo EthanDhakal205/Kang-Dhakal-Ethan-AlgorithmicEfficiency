@@ -10,27 +10,32 @@
     <packaging>jar</packaging>
 
     <name>AlgoViz Desktop</name>
-    <description>Algorithm Visualizer — Pure Java Swing Desktop Application</description>
+    <description>Algorithm Visualizer - Pure Java Swing Desktop Application</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mainClass>com.algoviz.gui.AlgoVizApp</mainClass>
+        <junit.version>5.10.2</junit.version>
     </properties>
 
     <dependencies>
-        <!-- FlatLaf — modern flat Look and Feel for Swing -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
             <version>3.4.1</version>
         </dependency>
-        <!-- FlatLaf extras (custom fonts, animated icons) -->
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-extras</artifactId>
             <version>3.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -41,8 +46,14 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.12.1</version>
             </plugin>
-
-            <!-- Package as executable fat JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -50,7 +61,9 @@
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <goals><goal>shade</goal></goals>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
