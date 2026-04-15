@@ -1,13 +1,18 @@
 package com.algoviz.gui;
 
-import com.algoviz.models.AlgoStep;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
-import java.util.List;
-import java.util.Set;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.HashSet;
+import java.util.Set;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import com.algoviz.models.AlgoStep;
 
 public class BarChartPanel extends JPanel {
 

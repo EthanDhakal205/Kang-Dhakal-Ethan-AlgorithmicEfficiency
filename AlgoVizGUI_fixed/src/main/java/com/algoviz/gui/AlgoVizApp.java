@@ -1,4 +1,39 @@
-package com.algoviz.gui;
+﻿package com.algoviz.gui;
+
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.text.JTextComponent;
 
 import com.algoviz.algorithms.searching.BinarySearch;
 import com.algoviz.algorithms.searching.ExponentialSearch;
@@ -19,20 +54,6 @@ import com.algoviz.algorithms.sorting.SelectionSort;
 import com.algoviz.algorithms.sorting.TimSort;
 import com.algoviz.models.AlgoResult;
 import com.algoviz.models.AlgoStep;
-
-import javax.swing.*;
-import javax.swing.Timer;
-import javax.swing.border.EmptyBorder;
-import javax.swing.text.JTextComponent;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 public class AlgoVizApp extends JFrame {
 

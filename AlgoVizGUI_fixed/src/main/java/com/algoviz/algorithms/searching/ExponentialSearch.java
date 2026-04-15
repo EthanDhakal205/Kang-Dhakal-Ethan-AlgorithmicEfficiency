@@ -1,10 +1,12 @@
 package com.algoviz.algorithms.searching;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.algoviz.models.AlgoResult;
 import com.algoviz.models.AlgoStep;
 import com.algoviz.models.AlgoStep.StepType;
-
-import java.util.*;
 
 
 public class ExponentialSearch {
