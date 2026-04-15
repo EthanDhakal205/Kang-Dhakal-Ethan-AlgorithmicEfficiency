@@ -1,7 +1,14 @@
 package com.algoviz.gui;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -12,6 +19,8 @@ import java.util.function.BiConsumer;
 public class SidebarPanel extends JPanel {
 
     public record AlgoEntry(String id, String name, String category, String badge, Color badgeColor) {}
+
+    private static final int ITEM_HEIGHT = 38;
 
     private static final List<AlgoEntry> SORT_ALGOS = List.of(
         new AlgoEntry("bubble", "Bubble Sort", "sort", "O(n^2)", Theme.ACCENT3),
@@ -46,7 +55,8 @@ public class SidebarPanel extends JPanel {
         allAlgos.addAll(SORT_ALGOS);
         allAlgos.addAll(SEARCH_ALGOS);
 
-        int contentH = 72 + 28 + (SORT_ALGOS.size() * 34) + 1 + 28 + (SEARCH_ALGOS.size() * 34) + 1 + 46;
+        int contentH = 72 + 28 + (SORT_ALGOS.size() * ITEM_HEIGHT) + 1
+                + 28 + (SEARCH_ALGOS.size() * ITEM_HEIGHT) + 1 + 46;
         setPreferredSize(new Dimension(Theme.SIDEBAR_W, contentH));
         setMinimumSize(new Dimension(Theme.SIDEBAR_W, 300));
         setBackground(Theme.BG2);
@@ -128,7 +138,6 @@ public class SidebarPanel extends JPanel {
     }
 
     private int paintNavItem(Graphics2D g2, int width, int y, AlgoEntry algo) {
-        int itemH = 34;
         boolean active = algo.id().equals(selectedId);
         boolean hovered = algo.id().equals(hoveredId);
 
@@ -136,40 +145,41 @@ public class SidebarPanel extends JPanel {
             GradientPaint gp = new GradientPaint(0, y, Theme.withAlpha(Theme.ACCENT, 30),
                     width, y, Theme.withAlpha(Theme.ACCENT, 0));
             g2.setPaint(gp);
-            g2.fillRect(0, y, width, itemH);
+            g2.fillRect(0, y, width, ITEM_HEIGHT);
             g2.setPaint(null);
             g2.setColor(Theme.ACCENT);
-            g2.fillRect(0, y, 3, itemH);
+            g2.fillRect(0, y, 3, ITEM_HEIGHT);
         } else if (hovered) {
             g2.setColor(Theme.withAlpha(Color.WHITE, 12));
-            g2.fillRect(0, y, width, itemH);
+            g2.fillRect(0, y, width, ITEM_HEIGHT);
             g2.setColor(Theme.BORDER2);
-            g2.fillRect(0, y, 3, itemH);
-        }
-
-        g2.setFont(Theme.FONT_NAV);
-        if (active) {
-            g2.setColor(Theme.ACCENT);
-            g2.drawString("▸ " + algo.name(), 14, y + 22);
-        } else {
-            g2.setColor(hovered ? Theme.TEXT : Theme.TEXT2);
-            g2.drawString(algo.name(), 18, y + 22);
+            g2.fillRect(0, y, 3, ITEM_HEIGHT);
         }
 
         g2.setFont(Theme.FONT_BADGE);
-        FontMetrics fm = g2.getFontMetrics();
-        int bw = fm.stringWidth(algo.badge()) + 10;
-        int bx = width - bw - 10;
-        int by = y + (itemH - 16) / 2;
+        FontMetrics badgeMetrics = g2.getFontMetrics();
+        int badgeWidth = badgeMetrics.stringWidth(algo.badge()) + 10;
+        int badgeX = width - badgeWidth - 10;
+        int badgeY = y + (ITEM_HEIGHT - 16) / 2;
 
+        g2.setFont(Theme.FONT_NAV);
+        FontMetrics navMetrics = g2.getFontMetrics();
+        int textLeft = active ? 14 : 18;
+        int textRight = badgeX - 12;
+        String navText = active ? "\u25b8 " + algo.name() : algo.name();
+        String label = fitText(navMetrics, navText, Math.max(24, textRight - textLeft));
+        g2.setColor(active ? Theme.ACCENT : (hovered ? Theme.TEXT : Theme.TEXT2));
+        g2.drawString(label, textLeft, y + 24);
+
+        g2.setFont(Theme.FONT_BADGE);
         g2.setColor(Theme.withAlpha(algo.badgeColor(), 25));
-        g2.fillRoundRect(bx, by, bw, 16, 4, 4);
+        g2.fillRoundRect(badgeX, badgeY, badgeWidth, 16, 4, 4);
         g2.setColor(Theme.withAlpha(algo.badgeColor(), 120));
-        g2.drawRoundRect(bx, by, bw - 1, 15, 4, 4);
+        g2.drawRoundRect(badgeX, badgeY, badgeWidth - 1, 15, 4, 4);
         g2.setColor(algo.badgeColor());
-        g2.drawString(algo.badge(), bx + 5, by + 12);
+        g2.drawString(algo.badge(), badgeX + 5, badgeY + 12);
 
-        return y + itemH;
+        return y + ITEM_HEIGHT;
     }
 
     private void paintFooter(Graphics2D g2, int width, int startY) {
@@ -225,18 +235,40 @@ public class SidebarPanel extends JPanel {
     private String hitTest(int mx, int my) {
         int y = 72 + 28;
         for (AlgoEntry algo : SORT_ALGOS) {
-            if (mx >= 0 && mx < getWidth() && my >= y && my < y + 34) {
+            if (mx >= 0 && mx < getWidth() && my >= y && my < y + ITEM_HEIGHT) {
                 return algo.id();
             }
-            y += 34;
+            y += ITEM_HEIGHT;
         }
         y += 1 + 28;
         for (AlgoEntry algo : SEARCH_ALGOS) {
-            if (mx >= 0 && mx < getWidth() && my >= y && my < y + 34) {
+            if (mx >= 0 && mx < getWidth() && my >= y && my < y + ITEM_HEIGHT) {
                 return algo.id();
             }
-            y += 34;
+            y += ITEM_HEIGHT;
         }
         return null;
+    }
+
+    private String fitText(FontMetrics fm, String text, int maxWidth) {
+        if (fm.stringWidth(text) <= maxWidth) {
+            return text;
+        }
+
+        String ellipsis = "...";
+        int ellipsisWidth = fm.stringWidth(ellipsis);
+        if (ellipsisWidth >= maxWidth) {
+            return ellipsis;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (fm.stringWidth(builder.toString() + ch) + ellipsisWidth > maxWidth) {
+                break;
+            }
+            builder.append(ch);
+        }
+        return builder + ellipsis;
     }
 }

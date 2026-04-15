@@ -28,6 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -263,7 +264,7 @@ public class AlgoVizApp extends JFrame {
         return cards;
     }
 
-    private JPanel buildVisualizerWorkspace() {
+    private JComponent buildVisualizerWorkspace() {
         JPanel panel = new JPanel();
         panel.setBackground(Theme.BG);
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -295,7 +296,14 @@ public class AlgoVizApp extends JFrame {
 
         info.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.add(info);
-        return panel;
+
+        JScrollPane scrollPane = new JScrollPane(panel,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(Theme.BG);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
     private JPanel buildPracticeWorkspace() {
@@ -604,3 +612,5 @@ public class AlgoVizApp extends JFrame {
         });
     }
 }
+
+

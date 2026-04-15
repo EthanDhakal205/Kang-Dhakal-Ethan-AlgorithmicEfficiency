@@ -56,7 +56,7 @@ public final class Theme {
     public static final Font FONT_BADGE= new Font(Font.MONOSPACED, Font.BOLD, 9);
 
     //  SIZES 
-    public static final int SIDEBAR_W = 230;
+    public static final int SIDEBAR_W = 272;
     public static final int TOPBAR_H = 60;
     public static final int RADIUS= 6;
     public static final int RADIUS_LG= 10;
@@ -148,3 +148,4 @@ public final class Theme {
         return new Color(c.getRed(), c.getGreen(), c.getBlue(), alpha);
     }
 }
+

@@ -40,8 +40,8 @@ public class InfoPanel extends JPanel {
 
     public InfoPanel() {
         setBackground(Theme.BG3);
-        setPreferredSize(new Dimension(0, 170));
-        setMinimumSize(new Dimension(0, 150));
+        setPreferredSize(new Dimension(0, 184));
+        setMinimumSize(new Dimension(0, 184));
     }
 
     public void update(String id, String cat, String desc) {
@@ -197,3 +197,4 @@ public class InfoPanel extends JPanel {
         }
     }
 }
+
