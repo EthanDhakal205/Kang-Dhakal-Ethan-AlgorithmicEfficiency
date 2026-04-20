@@ -45,4 +45,33 @@ public abstract class SearchAlgorithm {
         startTime = 0;
         endTime = 0;
     }
+
+    @SuppressWarnings("unchecked")
+    protected int compareValues(Object left, Object right) {
+        if (ignoreCase && left instanceof String && right instanceof String) {
+            return ((String) left).compareToIgnoreCase((String) right);
+        }
+        if (left instanceof Number && right instanceof Number) {
+            return Double.compare(((Number) left).doubleValue(), ((Number) right).doubleValue());
+        }
+        if (left instanceof Comparable<?> comparable) {
+            try {
+                return ((Comparable<Object>) comparable).compareTo(right);
+            } catch (ClassCastException ignored) {
+            }
+        }
+        return String.valueOf(left).compareTo(String.valueOf(right));
+    }
+
+    protected boolean isSortedAscending() {
+        if (arr == null || arr.length == 0) {
+            return false;
+        }
+        for (int i = 0; i < arr.length - 1; i++) {
+            if (compareValues(arr[i], arr[i + 1]) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

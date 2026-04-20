@@ -6,22 +6,13 @@ public class BinarySearch extends SearchAlgorithm {
 
     @Override
     protected boolean validate() {
-        if (arr == null || arr.length == 0 || target == null) return false;
-
-        for (int i = 0; i < arr.length - 1; i++) {
-            if (arr[i] instanceof Number && arr[i + 1] instanceof Number) {
-                if (((Number) arr[i]).doubleValue() > ((Number) arr[i + 1]).doubleValue()) return false;
-            } else if (arr[i] instanceof String && arr[i + 1] instanceof String) {
-                if (((String) arr[i]).compareToIgnoreCase((String) arr[i + 1]) > 0) return false;
-            }
-        }
-        return true;
+        return arr != null && arr.length > 0 && target != null && isSortedAscending();
     }
 
     @Override
     public int search() {
         if (!validate()) {
-            System.out.println(getName() + ": validation failed — array is null/empty, target is null, or array is not sorted.");
+            System.out.println(getName() + ": validation failed - array is null/empty, target is null, or array is not sorted.");
             return -1;
         }
 
@@ -35,24 +26,14 @@ public class BinarySearch extends SearchAlgorithm {
             int mid = (low + high) / 2;
             comparisons++;
 
-            if (ignoreCase && target instanceof String && arr[mid] instanceof String) {
-                int result = ((String) arr[mid]).compareToIgnoreCase((String) target);
-                if (result == 0) { stopTimer(); return mid; }
-                else if (result < 0) low = mid + 1;
-                else high = mid - 1;
-            } else if (arr[mid] instanceof Number && target instanceof Number) {
-                double midVal = ((Number) arr[mid]).doubleValue();
-                double targetVal = ((Number) target).doubleValue();
-                if (midVal == targetVal) { stopTimer(); return mid; }
-                else if (midVal < targetVal) low = mid + 1;
-                else high = mid - 1;
+            int result = compareValues(arr[mid], target);
+            if (result == 0) {
+                stopTimer();
+                return mid;
+            } else if (result < 0) {
+                low = mid + 1;
             } else {
-                if (arr[mid] instanceof Comparable) {
-                    int result = ((Comparable) arr[mid]).compareTo(target);
-                    if (result == 0) { stopTimer(); return mid; }
-                    else if (result < 0) low = mid + 1;
-                    else high = mid - 1;
-                }
+                high = mid - 1;
             }
         }
 
