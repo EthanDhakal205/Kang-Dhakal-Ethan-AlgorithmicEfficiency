@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -332,7 +331,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         for (String algo : algos) {
             AlgoButton button = new AlgoButton(algo, accent, rightAligned);
             button.setAlignmentX(LEFT_ALIGNMENT);
-            button.addActionListener(e -> selectAlgorithm(algo));
+            button.addActionListener(e -> {
+                selectAlgorithm(algo);
+                parent.repaint();
+            });
             parent.add(button);
         }
     }
