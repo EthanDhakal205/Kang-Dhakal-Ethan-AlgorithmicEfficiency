@@ -44,15 +44,35 @@ import javax.swing.event.DocumentListener;
 
 public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
-    private static final Color BG = new Color(10, 11, 14);
-    private static final Color PANEL = new Color(17, 19, 24);
-    private static final Color CARD = new Color(24, 27, 34);
-    private static final Color BORDER = new Color(38, 42, 54);
-    private static final Color ACCENT = new Color(82, 130, 255);
-    private static final Color ACCENT2 = new Color(52, 211, 153);
-    private static final Color TEXT = new Color(220, 225, 235);
-    private static final Color TEXT_DIM = new Color(100, 110, 130);
-    private static final Color TEXT_HINT = new Color(55, 62, 78);
+    // Dark palette
+    private static final Color[] DARK = {
+        new Color(10, 11, 14),    // BG
+        new Color(17, 19, 24),    // PANEL
+        new Color(24, 27, 34),    // CARD
+        new Color(38, 42, 54),    // BORDER
+        new Color(82, 130, 255),  // ACCENT
+        new Color(52, 211, 153),  // ACCENT2
+        new Color(220, 225, 235), // TEXT
+        new Color(100, 110, 130), // TEXT_DIM
+        new Color(55, 62, 78)     // TEXT_HINT
+    };
+
+    // Light palette
+    private static final Color[] LIGHT = {
+        new Color(245, 246, 250), // BG
+        new Color(230, 232, 240), // PANEL
+        new Color(215, 218, 230), // CARD
+        new Color(180, 185, 205), // BORDER
+        new Color(50, 100, 220),  // ACCENT
+        new Color(15, 160, 100),  // ACCENT2
+        new Color(15, 18, 35),    // TEXT
+        new Color(80, 88, 110),   // TEXT_DIM
+        new Color(160, 168, 190)  // TEXT_HINT
+    };
+
+    // Live color references — swapped by applyTheme()
+    private static Color BG, PANEL, CARD, BORDER, ACCENT, ACCENT2,
+                        TEXT, TEXT_DIM, TEXT_HINT;
 
     private static final Font MONO = new Font("JetBrains Mono", Font.PLAIN, 13);
     private static final Font SANS = new Font("Segoe UI", Font.PLAIN, 13);
@@ -86,7 +106,11 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private JCheckBox arrayIgnoreCaseBox;
     private JTextField sortArrayField;
 
+    private boolean darkMode = true;
+    private JButton themeBtn;
+
     public AlgorithmGUI() {
+        applyTheme();
         buildTreeGraph();
         viz = new VisualizerPanel(state);
         runner = new AlgoRunner(state, this);
@@ -106,6 +130,26 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         startAnimLoop();
         setVisible(true);
         refreshInputPanel();
+    }
+    private void applyTheme() {
+        Color[] t = darkMode ? DARK : LIGHT;
+        BG = t[0]; PANEL = t[1]; CARD = t[2]; BORDER = t[3];
+        ACCENT = t[4]; ACCENT2 = t[5]; TEXT = t[6];
+        TEXT_DIM = t[7]; TEXT_HINT = t[8];
+    }
+
+    private void rebuildUI() {
+        if (state.running) return;  // don't swap mid-animation
+        applyTheme();
+        getContentPane().removeAll();
+        getContentPane().setBackground(BG);
+        add(buildSearchSidebar(), BorderLayout.WEST);
+        add(buildMain(), BorderLayout.CENTER);
+        add(buildSortSidebar(), BorderLayout.EAST);
+        revalidate();
+        repaint();
+        refreshInputPanel();
+        themeBtn.setText(darkMode ? "☀ light" : "🌙 dark");
     }
 
     private void startAnimLoop() {
@@ -366,7 +410,18 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         algoLabel = new JLabel(state.selectedAlgo);
         algoLabel.setFont(SANS_B);
         algoLabel.setForeground(TEXT);
-        bar.add(algoLabel, BorderLayout.WEST);
+
+        themeBtn = actionButton(darkMode ? "☀ light" : "🌙 dark", false);
+        themeBtn.addActionListener(e -> {
+            darkMode = !darkMode;
+            rebuildUI();
+        });
+
+        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        westPanel.setOpaque(false);
+        westPanel.add(themeBtn);
+        westPanel.add(algoLabel);
+        bar.add(westPanel, BorderLayout.WEST);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
