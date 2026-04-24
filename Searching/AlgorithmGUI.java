@@ -64,6 +64,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private final VisualizerPanel viz;
     private final AlgoRunner runner;
     private Timer animLoop;
+    private volatile Thread algoThread;
 
     private JScrollPane vizScroll;
     private JLabel statusLabel;
@@ -591,7 +592,13 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         buttons.setOpaque(false);
         resetBtn = actionButton("reset", false);
         runBtn = actionButton("run", true);
-        resetBtn.addActionListener(e -> resetVisuals());
+        resetBtn.addActionListener(e -> {
+        if (state.running && algoThread != null) {
+            algoThread.interrupt();   // triggers InterruptedException in sleep()
+        } else {
+        resetVisuals();
+        }
+        });
         runBtn.addActionListener(e -> {
             if (!state.running) {
                 runAlgorithm();
@@ -604,47 +611,78 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private void runAlgorithm() {
-        if (state.running) {
-            return;
-        }
+    if (state.running) {
+        return;
+    }
 
-        boolean ready = true;
-        if (state.isArrayAlgo()) {
-            ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
-        } else if (state.isSortAlgo()) {
-            ready = parseSortInput(sortArrayField.getText(), true);
-        }
-        if (!ready) {
-            return;
-        }
+    boolean ready = true;
+    if (state.isArrayAlgo()) {
+        ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+    } else if (state.isSortAlgo()) {
+        ready = parseSortInput(sortArrayField.getText(), true);
+    }
+    if (!ready) {
+        return;
+    }
 
-        state.running = true;
-        runBtn.setEnabled(false);
-        state.resetStats();
+    state.running = true;
+    runBtn.setEnabled(false);
+    resetBtn.setText("stop");       // <-- rename to stop
+    state.resetStats();
 
-        new Thread(() -> {
-            try {
-                if (state.isArrayAlgo()) {
-                    runner.runArrayAlgo();
-                } else if (state.isGraphAlgo()) {
-                    runner.runGraphAlgo();
-                } else if (state.isSortAlgo()) {
-                    runner.runSortAlgo();
-                } else {
-                    runner.runStringAlgo();
-                }
-                updateStats();
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            } catch (Exception ex) {
-                String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
-                SwingUtilities.invokeLater(() -> statusLabel.setText(message));
-                updateStats();
-            } finally {
-                state.running = false;
-                SwingUtilities.invokeLater(() -> runBtn.setEnabled(true));
+    algoThread = new Thread(() -> {         // <-- store the thread
+        try {
+            if (state.isArrayAlgo()) {
+                runner.runArrayAlgo();
+            } else if (state.isGraphAlgo()) {
+                runner.runGraphAlgo();
+            } else if (state.isSortAlgo()) {
+                runner.runSortAlgo();
+            } else {
+                runner.runStringAlgo();
             }
-        }).start();
+            updateStats();
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+            SwingUtilities.invokeLater(() -> {   // <-- clean up on stop
+                state.running = false;
+                forceResetVisuals();
+            });
+        } catch (Exception ex) {
+            String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
+            SwingUtilities.invokeLater(() -> statusLabel.setText(message));
+            updateStats();
+        } finally {
+            state.running = false;
+            SwingUtilities.invokeLater(() -> {
+                runBtn.setEnabled(true);
+                resetBtn.setText("reset");  // <-- restore label
+            });
+        }
+    });
+    algoThread.start();
+}
+
+    private void forceResetVisuals() {
+        
+        state.resetStats();
+        state.resetCaption();
+        if (state.isArrayAlgo()) {
+            state.resetArrayState();
+        } else if (state.isSortAlgo()) {
+            state.resetSortState();
+        } else if (state.isStringAlgo()) {
+            state.resetStringState();
+        } else {
+            state.resetGraphState();
+        }
+        if (statusLabel != null) statusLabel.setText("stopped - press run");
+        if (cmpLabel != null) cmpLabel.setText("comparisons: -");
+        if (swapsLabel != null) swapsLabel.setText("swaps: -");
+        if (timeLabel != null) timeLabel.setText("time: -");
+        if (resultLabel != null) resultLabel.setText("result: -");
+        viz.revalidate();
+        viz.repaint();
     }
 
     private void updateStats() {
@@ -668,38 +706,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private void resetVisuals() {
-        if (state.running || viz == null) {
-            return;
-        }
-        state.resetStats();
-        state.resetCaption();
-        if (state.isArrayAlgo()) {
-            state.resetArrayState();
-        } else if (state.isSortAlgo()) {
-            state.resetSortState();
-        } else if (state.isStringAlgo()) {
-            state.resetStringState();
-        } else {
-            state.resetGraphState();
-        }
-        if (statusLabel != null) {
-            statusLabel.setText("ready - press run");
-        }
-        if (cmpLabel != null) {
-            cmpLabel.setText("comparisons: -");
-        }
-        if (swapsLabel != null) {
-            swapsLabel.setText("swaps: -");
-        }
-        if (timeLabel != null) {
-            timeLabel.setText("time: -");
-        }
-        if (resultLabel != null) {
-            resultLabel.setText("result: -");
-        }
-        viz.revalidate();
-        viz.repaint();
-    }
+    if (state.running || viz == null) return;
+    forceResetVisuals();
+}
 
     private void refreshInputPanel() {
         if (state.isArrayAlgo()) {
