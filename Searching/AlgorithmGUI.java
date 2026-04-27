@@ -141,6 +141,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private void rebuildUI() {
         if (state.running) return;  // don't swap mid-animation
         applyTheme();
+        viz.applyTheme(darkMode);
         getContentPane().removeAll();
         getContentPane().setBackground(BG);
         add(buildSearchSidebar(), BorderLayout.WEST);
