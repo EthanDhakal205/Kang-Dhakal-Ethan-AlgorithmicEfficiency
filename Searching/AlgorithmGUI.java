@@ -54,7 +54,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         new Color(52, 211, 153),  // ACCENT2
         new Color(220, 225, 235), // TEXT
         new Color(100, 110, 130), // TEXT_DIM
-        new Color(55, 62, 78)     // TEXT_HINT
+        new Color(55, 62, 78),     // TEXT_HINT
+        new Color(28, 38, 70),   // ALGO_ACTIVE_BG
+        new Color(24, 27, 38),   // ALGO_HOVER_BG
     };
 
     // Light palette
@@ -67,12 +69,14 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         new Color(15, 160, 100),  // ACCENT2
         new Color(15, 18, 35),    // TEXT
         new Color(80, 88, 110),   // TEXT_DIM
-        new Color(160, 168, 190)  // TEXT_HINT
+        new Color(160, 168, 190),  // TEXT_HINT
+        new Color(210, 220, 248), // ALGO_ACTIVE_BG
+        new Color(225, 228, 240), // ALGO_HOVER_BG
     };
 
     // Live color references — swapped by applyTheme()
     private static Color BG, PANEL, CARD, BORDER, ACCENT, ACCENT2,
-                        TEXT, TEXT_DIM, TEXT_HINT;
+                        TEXT, TEXT_DIM, TEXT_HINT, ALGO_ACTIVE_BG, ALGO_HOVER_BG;
 
     private static final Font MONO = new Font("JetBrains Mono", Font.PLAIN, 13);
     private static final Font SANS = new Font("Segoe UI", Font.PLAIN, 13);
@@ -133,15 +137,24 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
     private void applyTheme() {
         Color[] t = darkMode ? DARK : LIGHT;
-        BG = t[0]; PANEL = t[1]; CARD = t[2]; BORDER = t[3];
-        ACCENT = t[4]; ACCENT2 = t[5]; TEXT = t[6];
-        TEXT_DIM = t[7]; TEXT_HINT = t[8];
+        BG = t[0];
+        PANEL = t[1];
+        CARD = t[2]; 
+        BORDER = t[3];
+        ACCENT = t[4]; 
+        ACCENT2 = t[5]; 
+        TEXT = t[6];
+        TEXT_DIM = t[7]; 
+        TEXT_HINT = t[8];
+        ALGO_ACTIVE_BG = t[9]; 
+        ALGO_HOVER_BG = t[10];
     }
 
     private void rebuildUI() {
         if (state.running) return;  // don't swap mid-animation
         applyTheme();
         viz.applyTheme(darkMode);
+        if (practiceDialog != null) practiceDialog.applyTheme(darkMode);
         getContentPane().removeAll();
         getContentPane().setBackground(BG);
         add(buildSearchSidebar(), BorderLayout.WEST);
@@ -1136,7 +1149,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     private JTextField styledField(int cols) {
         JTextField field = new JTextField(cols);
-        field.setBackground(new Color(14, 16, 21));
+        field.setBackground(CARD);
         field.setForeground(TEXT);
         field.setCaretColor(ACCENT);
         field.setFont(MONO);
@@ -1153,7 +1166,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JComponent editor = spinner.getEditor();
         if (editor instanceof DefaultEditor) {
             JTextField field = ((DefaultEditor) editor).getTextField();
-            field.setBackground(new Color(14, 16, 21));
+            field.setBackground(CARD);
             field.setForeground(TEXT);
             field.setFont(MONO);
             field.setCaretColor(ACCENT);
@@ -1237,13 +1250,13 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             boolean active = algorithmName.equals(state.selectedAlgo);
             if (active) {
-                g2.setColor(new Color(28, 38, 70));
+                g2.setColor(ALGO_ACTIVE_BG);
                 g2.fillRoundRect(8, 2, getWidth() - 16, getHeight() - 4, 6, 6);
                 int stripeX = rightAligned ? getWidth() - 11 : 8;
                 g2.setColor(accent);
                 g2.fillRoundRect(stripeX, 2, 3, getHeight() - 4, 2, 2);
             } else if (hovered) {
-                g2.setColor(new Color(24, 27, 38));
+                g2.setColor(ALGO_HOVER_BG);
                 g2.fillRoundRect(8, 2, getWidth() - 16, getHeight() - 4, 6, 6);
             }
             setForeground(active ? accent : hovered ? TEXT : TEXT_DIM);

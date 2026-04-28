@@ -14,7 +14,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -40,51 +39,93 @@ import javax.swing.text.Highlighter;
 
 class PracticeDialog extends JDialog {
 
-    private static final Color BG = new Color(10, 11, 14);
-    private static final Color PANEL = new Color(17, 19, 24);
-    private static final Color CARD = new Color(24, 27, 34);
-    private static final Color BORDER = new Color(38, 42, 54);
-    private static final Color ACCENT = new Color(82, 130, 255);
-    private static final Color ACCENT2 = new Color(52, 211, 153);
-    private static final Color WARN = new Color(251, 191, 36);
-    private static final Color DANGER = new Color(239, 68, 68);
-    private static final Color TEXT = new Color(220, 225, 235);
-    private static final Color TEXT_DIM = new Color(100, 110, 130);
-    private static final Color TEXT_HINT = new Color(55, 62, 78);
-    private static final Color SURFACE = new Color(14, 16, 21);
+    // ── Dark palette ──────────────────────────────────────────────────────────
+    private static final Color[] DARK = {
+        new Color(10,  11,  14),   // 0  BG
+        new Color(17,  19,  24),   // 1  PANEL
+        new Color(24,  27,  34),   // 2  CARD
+        new Color(38,  42,  54),   // 3  BORDER
+        new Color(82,  130, 255),  // 4  ACCENT
+        new Color(52,  211, 153),  // 5  ACCENT2
+        new Color(251, 191, 36),   // 6  WARN
+        new Color(239, 68,  68),   // 7  DANGER
+        new Color(220, 225, 235),  // 8  TEXT
+        new Color(100, 110, 130),  // 9  TEXT_DIM
+        new Color(55,  62,  78),   // 10 TEXT_HINT
+        new Color(14,  16,  21),   // 11 SURFACE
+    };
 
-    private static final Font MONO = new Font("JetBrains Mono", Font.PLAIN, 13);
-    private static final Font MONO_B = new Font("JetBrains Mono", Font.BOLD, 13);
-    private static final Font SANS = new Font("Segoe UI", Font.PLAIN, 13);
-    private static final Font SANS_B = new Font("Segoe UI", Font.BOLD, 14);
-    private static final Font TITLE = new Font("Segoe UI", Font.BOLD, 22);
-    private static final Font SMALL = new Font("Segoe UI", Font.PLAIN, 11);
+    // ── Light palette ─────────────────────────────────────────────────────────
+    private static final Color[] LIGHT = {
+        new Color(245, 246, 250),  // 0  BG
+        new Color(230, 232, 240),  // 1  PANEL
+        new Color(215, 218, 230),  // 2  CARD
+        new Color(180, 185, 205),  // 3  BORDER
+        new Color(50,  100, 220),  // 4  ACCENT
+        new Color(15,  160, 100),  // 5  ACCENT2
+        new Color(200, 140, 10),   // 6  WARN
+        new Color(200, 50,  50),   // 7  DANGER
+        new Color(15,  18,  35),   // 8  TEXT
+        new Color(80,  88,  110),  // 9  TEXT_DIM
+        new Color(160, 168, 190),  // 10 TEXT_HINT
+        new Color(235, 237, 245),  // 11 SURFACE
+    };
 
+    // ── Live color references — swapped by applyTheme() ───────────────────────
+    private static Color BG, PANEL, CARD, BORDER, ACCENT, ACCENT2,
+                         WARN, DANGER, TEXT, TEXT_DIM, TEXT_HINT, SURFACE;
+
+    // Static initializer: set dark defaults before any field initializers run
+    static {
+        assignColors(DARK);
+    }
+
+    private static void assignColors(Color[] t) {
+        BG       = t[0];  PANEL    = t[1];  CARD     = t[2];  BORDER  = t[3];
+        ACCENT   = t[4];  ACCENT2  = t[5];  WARN     = t[6];  DANGER  = t[7];
+        TEXT     = t[8];  TEXT_DIM = t[9];  TEXT_HINT = t[10]; SURFACE = t[11];
+    }
+
+    // ── Fonts ─────────────────────────────────────────────────────────────────
+    private static final Font MONO   = new Font("JetBrains Mono", Font.PLAIN, 13);
+    private static final Font MONO_B = new Font("JetBrains Mono", Font.BOLD,  13);
+    private static final Font SANS   = new Font("Segoe UI",       Font.PLAIN, 13);
+    private static final Font SANS_B = new Font("Segoe UI",       Font.BOLD,  14);
+    private static final Font TITLE  = new Font("Segoe UI",       Font.BOLD,  22);
+    private static final Font SMALL  = new Font("Segoe UI",       Font.PLAIN, 11);
+
+    // ── State ─────────────────────────────────────────────────────────────────
     private final PracticeJudge judge = new PracticeJudge();
     private final Map<String, String> drafts = new HashMap<>();
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
-    private final Highlighter.HighlightPainter compilerHighlightPainter =
-        new DefaultHighlighter.DefaultHighlightPainter(new Color(DANGER.getRed(), DANGER.getGreen(), DANGER.getBlue(), 70));
 
-    private final JLabel titleLabel = new JLabel("Practice Lab");
+    // Highlighter is recreated on theme change so its color updates too
+    private Highlighter.HighlightPainter compilerHighlightPainter =
+        new DefaultHighlighter.DefaultHighlightPainter(
+            new Color(DANGER.getRed(), DANGER.getGreen(), DANGER.getBlue(), 70));
+
+    // ── Components ────────────────────────────────────────────────────────────
+    private final JLabel titleLabel     = new JLabel("Practice Lab");
     private final JLabel signatureLabel = new JLabel();
-    private final JLabel statusLabel = new JLabel("Ready to compile");
-    private final JTextArea editorArea = createCodeArea(true);
-    private final JTextArea lineNumberArea = createLineNumberArea();
-    private final JTextArea promptArea = createReadArea();
-    private final JTextArea testsArea = createReadArea();
-    private final JTextArea resultsArea = createReadArea();
-    private final JTextArea answerArea = createCodeArea(false);
+    private final JLabel statusLabel    = new JLabel("Ready to compile");
+    private final JTextArea editorArea      = createCodeArea(true);
+    private final JTextArea lineNumberArea  = createLineNumberArea();
+    private final JTextArea promptArea      = createReadArea();
+    private final JTextArea testsArea       = createReadArea();
+    private final JTextArea resultsArea     = createReadArea();
+    private final JTextArea answerArea      = createCodeArea(false);
     private final JTextArea unsupportedArea = createReadArea();
     private final JComboBox<String> answerDropdown =
         new JComboBox<>(new String[]{"Hide reference answer", "Show reference answer"});
-    private final ActionButton runTestsButton = new ActionButton("run tests", ACCENT, true);
+    private final ActionButton runTestsButton  = new ActionButton("run tests",  ACCENT,  true);
     private final ActionButton resetCodeButton = new ActionButton("reset code", ACCENT2, false);
     private final JScrollPane editorScrollPane = createEditorScrollPane();
-    private final JTabbedPane sideTabs = createSideTabs();
+    private final JTabbedPane sideTabs         = createSideTabs();
 
     private PracticeCatalog.Problem currentProblem;
+
+    // ── Constructor ───────────────────────────────────────────────────────────
 
     PracticeDialog(JFrame owner) {
         super(owner, "Practice Lab", false);
@@ -94,7 +135,7 @@ class PracticeDialog extends JDialog {
         setPreferredSize(new Dimension(1180, 760));
 
         cards.setBackground(BG);
-        cards.add(buildSupportedPanel(), "supported");
+        cards.add(buildSupportedPanel(),   "supported");
         cards.add(buildUnsupportedPanel(), "unsupported");
         add(cards, BorderLayout.CENTER);
 
@@ -114,6 +155,91 @@ class PracticeDialog extends JDialog {
         );
     }
 
+    // ── Theme API ─────────────────────────────────────────────────────────────
+
+    void applyTheme(boolean darkMode) {
+        assignColors(darkMode ? DARK : LIGHT);
+
+        // Recreate the compiler highlight painter with the updated DANGER color
+        compilerHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
+            new Color(DANGER.getRed(), DANGER.getGreen(), DANGER.getBlue(), 70));
+
+        // Re-apply colors to all live components
+        getContentPane().setBackground(BG);
+        cards.setBackground(BG);
+
+        // Text areas
+        for (JTextArea area : new JTextArea[]{
+                editorArea, answerArea, promptArea, testsArea, resultsArea, unsupportedArea}) {
+            area.setBackground(SURFACE);
+            area.setForeground(TEXT);
+            area.setCaretColor(ACCENT);
+        }
+        lineNumberArea.setBackground(PANEL);
+        lineNumberArea.setForeground(TEXT_HINT);
+
+        // Dropdown
+        answerDropdown.setBackground(SURFACE);
+        answerDropdown.setForeground(TEXT);
+
+        // Labels
+        titleLabel.setForeground(TEXT);
+        signatureLabel.setForeground(ACCENT2);
+        statusLabel.setForeground(TEXT_DIM);
+
+        // Tabs
+        sideTabs.setBackground(PANEL);
+        sideTabs.setForeground(TEXT);
+
+        // Scroll panes — update borders and viewport backgrounds
+        refreshScrollPane(editorScrollPane);
+        editorScrollPane.getRowHeader().setBackground(PANEL);
+        for (int i = 0; i < sideTabs.getTabCount(); i++) {
+            JComponent tab = (JComponent) sideTabs.getComponentAt(i);
+            refreshPanelColors(tab);
+        }
+
+        // Editor scroll border state
+        clearCompilerMarkers();
+
+        repaint();
+        revalidate();
+    }
+
+    // Recursively refreshes background/foreground/borders on panels and scroll panes
+    private void refreshPanelColors(java.awt.Component c) {
+        if (c instanceof JPanel panel) {
+            panel.setBackground(panel.isOpaque() ? CARD : panel.getBackground());
+            if (panel.getBorder() instanceof javax.swing.border.CompoundBorder) {
+                panel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    new EmptyBorder(10, 10, 10, 10)));
+            }
+        }
+        if (c instanceof JLabel label) {
+            // preserve role-specific colors (ACCENT2 for signature, etc.)
+            Color fg = label.getForeground();
+            if (fg.equals(TEXT) || fg.equals(TEXT_DIM) || fg.equals(TEXT_HINT)) {
+                label.setForeground(fg); // already updated via direct refs above
+            }
+        }
+        if (c instanceof JScrollPane sp) {
+            refreshScrollPane(sp);
+        }
+        if (c instanceof java.awt.Container container) {
+            for (java.awt.Component child : container.getComponents()) {
+                refreshPanelColors(child);
+            }
+        }
+    }
+
+    private void refreshScrollPane(JScrollPane sp) {
+        sp.setBorder(BorderFactory.createLineBorder(BORDER));
+        sp.getViewport().setBackground(SURFACE);
+    }
+
+    // ── Public API ────────────────────────────────────────────────────────────
+
     void showForAlgorithm(String algorithmName) {
         setAlgorithm(algorithmName);
         pack();
@@ -121,6 +247,8 @@ class PracticeDialog extends JDialog {
         setVisible(true);
         toFront();
     }
+
+    // ── Algorithm selection ───────────────────────────────────────────────────
 
     private void setAlgorithm(String algorithmName) {
         if (currentProblem != null) {
@@ -161,6 +289,8 @@ class PracticeDialog extends JDialog {
         cardLayout.show(cards, "supported");
     }
 
+    // ── Panel builders ────────────────────────────────────────────────────────
+
     private JPanel buildSupportedPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBackground(BG);
@@ -168,6 +298,7 @@ class PracticeDialog extends JDialog {
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
+
         JPanel titleGroup = new JPanel();
         titleGroup.setOpaque(false);
         titleGroup.setLayout(new BorderLayout(0, 4));
@@ -175,7 +306,7 @@ class PracticeDialog extends JDialog {
         titleLabel.setForeground(TEXT);
         signatureLabel.setFont(MONO_B);
         signatureLabel.setForeground(ACCENT2);
-        titleGroup.add(titleLabel, BorderLayout.NORTH);
+        titleGroup.add(titleLabel,     BorderLayout.NORTH);
         titleGroup.add(signatureLabel, BorderLayout.SOUTH);
         header.add(titleGroup, BorderLayout.WEST);
 
@@ -186,7 +317,8 @@ class PracticeDialog extends JDialog {
 
         panel.add(header, BorderLayout.NORTH);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, buildEditorPane(), sideTabs);
+        JSplitPane splitPane = new JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT, buildEditorPane(), sideTabs);
         splitPane.setBorder(null);
         splitPane.setDividerSize(1);
         splitPane.setResizeWeight(0.68);
@@ -214,7 +346,7 @@ class PracticeDialog extends JDialog {
         statusLabel.setForeground(TEXT_DIM);
         toolbar.add(statusLabel, BorderLayout.EAST);
 
-        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(toolbar,          BorderLayout.NORTH);
         panel.add(editorScrollPane, BorderLayout.CENTER);
         return panel;
     }
@@ -224,10 +356,10 @@ class PracticeDialog extends JDialog {
         tabs.setFont(MONO_B);
         tabs.setBackground(PANEL);
         tabs.setForeground(TEXT);
-        tabs.addTab("Prompt", sectionPanel("PROMPT", createScrollPane(promptArea)));
-        tabs.addTab("Tests", sectionPanel("TEST CASES", createScrollPane(testsArea)));
-        tabs.addTab("Results", sectionPanel("RESULTS", createScrollPane(resultsArea)));
-        tabs.addTab("Answer", buildAnswerSection());
+        tabs.addTab("Prompt",  sectionPanel("PROMPT",      createScrollPane(promptArea)));
+        tabs.addTab("Tests",   sectionPanel("TEST CASES",  createScrollPane(testsArea)));
+        tabs.addTab("Results", sectionPanel("RESULTS",     createScrollPane(resultsArea)));
+        tabs.addTab("Answer",  buildAnswerSection());
         return tabs;
     }
 
@@ -236,19 +368,18 @@ class PracticeDialog extends JDialog {
         panel.setBackground(CARD);
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(BORDER),
-            new EmptyBorder(10, 10, 10, 10)
-        ));
+            new EmptyBorder(10, 10, 10, 10)));
 
         JPanel header = new JPanel(new BorderLayout(8, 0));
         header.setOpaque(false);
         JLabel label = new JLabel("REFERENCE ANSWER");
         label.setFont(SMALL);
         label.setForeground(TEXT_DIM);
-        header.add(label, BorderLayout.WEST);
+        header.add(label,          BorderLayout.WEST);
         header.add(answerDropdown, BorderLayout.CENTER);
 
-        panel.add(header, BorderLayout.NORTH);
-        panel.add(createScrollPane(answerArea), BorderLayout.CENTER);
+        panel.add(header,                         BorderLayout.NORTH);
+        panel.add(createScrollPane(answerArea),   BorderLayout.CENTER);
         return panel;
     }
 
@@ -270,43 +401,31 @@ class PracticeDialog extends JDialog {
         panel.setBackground(CARD);
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(BORDER),
-            new EmptyBorder(10, 10, 10, 10)
-        ));
+            new EmptyBorder(10, 10, 10, 10)));
 
         JLabel label = new JLabel(title);
         label.setFont(SMALL);
         label.setForeground(TEXT_DIM);
-        panel.add(label, BorderLayout.NORTH);
+        panel.add(label,   BorderLayout.NORTH);
         panel.add(content, BorderLayout.CENTER);
         return panel;
     }
+
+    // ── Editor setup ──────────────────────────────────────────────────────────
 
     private void installEditorEnhancements() {
         editorArea.getInputMap().put(KeyStroke.getKeyStroke("control ENTER"), "runTests");
         editorArea.getActionMap().put("runTests", new AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                if (runTestsButton.isEnabled()) {
-                    runTests();
-                }
+                if (runTestsButton.isEnabled()) runTests();
             }
         });
 
         editorArea.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                editorChanged();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                editorChanged();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                editorChanged();
-            }
+            @Override public void insertUpdate(DocumentEvent e)  { editorChanged(); }
+            @Override public void removeUpdate(DocumentEvent e)  { editorChanged(); }
+            @Override public void changedUpdate(DocumentEvent e) { editorChanged(); }
         });
     }
 
@@ -318,6 +437,8 @@ class PracticeDialog extends JDialog {
             statusLabel.setText("Edited. Run tests again to refresh the result.");
         }
     }
+
+    // ── Component factories ───────────────────────────────────────────────────
 
     private JTextArea createCodeArea(boolean editable) {
         JTextArea area = new JTextArea();
@@ -373,56 +494,22 @@ class PracticeDialog extends JDialog {
         return scrollPane;
     }
 
+    // ── Line numbers ──────────────────────────────────────────────────────────
+
     private void updateLineNumbers() {
         int lineCount = Math.max(1, editorArea.getLineCount());
         StringBuilder builder = new StringBuilder();
         for (int i = 1; i <= lineCount; i++) {
-            if (i > 1) {
-                builder.append(System.lineSeparator());
-            }
+            if (i > 1) builder.append(System.lineSeparator());
             builder.append(i);
         }
         lineNumberArea.setText(builder.toString());
     }
 
-    private String formatTests(PracticeCatalog.Problem problem) {
-        StringBuilder builder = new StringBuilder();
-        for (PracticeCatalog.TestCase testCase : problem.testCases()) {
-            if (!builder.isEmpty()) {
-                builder.append(System.lineSeparator()).append(System.lineSeparator());
-            }
-            builder.append(testCase.describe());
-        }
-        return builder.toString();
-    }
-
-    private void updateAnswerView() {
-        if (currentProblem == null || answerDropdown.getSelectedIndex() == 0) {
-            answerArea.setText("Reference answer hidden. Use the dropdown to reveal a working solution.");
-        } else {
-            answerArea.setText(currentProblem.answerCode());
-        }
-        answerArea.setCaretPosition(0);
-    }
-
-    private void resetEditor() {
-        if (currentProblem == null) {
-            return;
-        }
-        editorArea.setText(currentProblem.starterCode());
-        editorArea.setCaretPosition(0);
-        drafts.put(currentProblem.algorithmId(), currentProblem.starterCode());
-        clearCompilerMarkers();
-        statusLabel.setForeground(TEXT_DIM);
-        statusLabel.setText("Starter template restored.");
-        resultsArea.setText("Starter template restored. Run tests to validate your implementation.");
-        sideTabs.setSelectedIndex(2);
-    }
+    // ── Test runner ───────────────────────────────────────────────────────────
 
     private void runTests() {
-        if (currentProblem == null) {
-            return;
-        }
+        if (currentProblem == null) return;
 
         PracticeCatalog.Problem problem = currentProblem;
         String source = editorArea.getText();
@@ -431,7 +518,8 @@ class PracticeDialog extends JDialog {
         clearCompilerMarkers();
         statusLabel.setForeground(ACCENT2);
         statusLabel.setText("Compiling UserSolution and running tests...");
-        resultsArea.setText("Compiling UserSolution and running " + problem.testCases().size() + " test case(s)...");
+        resultsArea.setText("Compiling UserSolution and running "
+            + problem.testCases().size() + " test case(s)...");
         sideTabs.setSelectedIndex(2);
 
         new SwingWorker<PracticeRunResult, Void>() {
@@ -470,7 +558,8 @@ class PracticeDialog extends JDialog {
             statusLabel.setForeground(DANGER);
             if (!result.compilerIssues().isEmpty()) {
                 PracticeRunResult.CompilerIssue issue = result.compilerIssues().get(0);
-                statusLabel.setText("Compilation error at line " + issue.line() + ", column " + issue.column() + ".");
+                statusLabel.setText("Compilation error at line "
+                    + issue.line() + ", column " + issue.column() + ".");
             } else {
                 statusLabel.setText("Compilation failed.");
             }
@@ -485,6 +574,8 @@ class PracticeDialog extends JDialog {
         }
     }
 
+    // ── Compiler markers ──────────────────────────────────────────────────────
+
     private void clearCompilerMarkers() {
         editorArea.getHighlighter().removeAllHighlights();
         editorScrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -492,30 +583,24 @@ class PracticeDialog extends JDialog {
 
     private void applyCompilerIssues(List<PracticeRunResult.CompilerIssue> issues) {
         clearCompilerMarkers();
-        if (issues.isEmpty()) {
-            return;
-        }
+        if (issues.isEmpty()) return;
 
         editorScrollPane.setBorder(BorderFactory.createLineBorder(DANGER));
         int firstOffset = -1;
         for (PracticeRunResult.CompilerIssue issue : issues) {
-            int lineIndex = (int) Math.max(0, Math.min(editorArea.getLineCount() - 1, issue.line() - 1));
+            int lineIndex = (int) Math.max(0,
+                Math.min(editorArea.getLineCount() - 1, issue.line() - 1));
             try {
                 int lineStart = editorArea.getLineStartOffset(lineIndex);
-                int lineEnd = editorArea.getLineEndOffset(lineIndex);
+                int lineEnd   = editorArea.getLineEndOffset(lineIndex);
                 editorArea.getHighlighter().addHighlight(lineStart, lineEnd, compilerHighlightPainter);
                 int columnOffset = issue.column() > 0 ? (int) issue.column() - 1 : 0;
                 int candidate = Math.min(lineStart + columnOffset, Math.max(lineStart, lineEnd - 1));
-                if (firstOffset < 0) {
-                    firstOffset = candidate;
-                }
+                if (firstOffset < 0) firstOffset = candidate;
             } catch (BadLocationException ignored) {
             }
         }
-
-        if (firstOffset >= 0) {
-            moveCaretTo(firstOffset);
-        }
+        if (firstOffset >= 0) moveCaretTo(firstOffset);
     }
 
     private void moveCaretTo(int offset) {
@@ -523,11 +608,20 @@ class PracticeDialog extends JDialog {
         editorArea.setCaretPosition(offset);
         try {
             Rectangle2D rect = editorArea.modelToView2D(offset);
-            if (rect != null) {
-                editorArea.scrollRectToVisible(rect.getBounds());
-            }
+            if (rect != null) editorArea.scrollRectToVisible(rect.getBounds());
         } catch (BadLocationException ignored) {
         }
+    }
+
+    // ── Formatting ────────────────────────────────────────────────────────────
+
+    private String formatTests(PracticeCatalog.Problem problem) {
+        StringBuilder builder = new StringBuilder();
+        for (PracticeCatalog.TestCase testCase : problem.testCases()) {
+            if (!builder.isEmpty()) builder.append(System.lineSeparator()).append(System.lineSeparator());
+            builder.append(testCase.describe());
+        }
+        return builder.toString();
     }
 
     private String formatRunResult(PracticeRunResult result) {
@@ -543,6 +637,29 @@ class PracticeDialog extends JDialog {
         return builder.toString();
     }
 
+    // ── Misc ──────────────────────────────────────────────────────────────────
+
+    private void updateAnswerView() {
+        if (currentProblem == null || answerDropdown.getSelectedIndex() == 0) {
+            answerArea.setText("Reference answer hidden. Use the dropdown to reveal a working solution.");
+        } else {
+            answerArea.setText(currentProblem.answerCode());
+        }
+        answerArea.setCaretPosition(0);
+    }
+
+    private void resetEditor() {
+        if (currentProblem == null) return;
+        editorArea.setText(currentProblem.starterCode());
+        editorArea.setCaretPosition(0);
+        drafts.put(currentProblem.algorithmId(), currentProblem.starterCode());
+        clearCompilerMarkers();
+        statusLabel.setForeground(TEXT_DIM);
+        statusLabel.setText("Starter template restored.");
+        resultsArea.setText("Starter template restored. Run tests to validate your implementation.");
+        sideTabs.setSelectedIndex(2);
+    }
+
     private void setBusy(boolean busy) {
         boolean enabled = !busy && currentProblem != null;
         runTestsButton.setEnabled(enabled);
@@ -551,6 +668,8 @@ class PracticeDialog extends JDialog {
         editorArea.setEditable(!busy && currentProblem != null);
     }
 
+    // ── ActionButton ──────────────────────────────────────────────────────────
+
     private static class ActionButton extends JButton {
         private final Color accent;
         private final boolean primary;
@@ -558,7 +677,7 @@ class PracticeDialog extends JDialog {
 
         ActionButton(String text, Color accent, boolean primary) {
             super(text);
-            this.accent = accent;
+            this.accent  = accent;
             this.primary = primary;
             setFont(SANS_B);
             setForeground(primary ? Color.WHITE : accent);
@@ -569,17 +688,8 @@ class PracticeDialog extends JDialog {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             setPreferredSize(new Dimension(text.equals("run tests") ? 118 : 110, 34));
             addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                    hovered = true;
-                    repaint();
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                    hovered = false;
-                    repaint();
-                }
+                @Override public void mouseEntered(MouseEvent e) { hovered = true;  repaint(); }
+                @Override public void mouseExited(MouseEvent e)  { hovered = false; repaint(); }
             });
         }
 
@@ -587,13 +697,15 @@ class PracticeDialog extends JDialog {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            Color fill = primary ? accent : new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), hovered ? 40 : 22);
-            if (!isEnabled()) {
-                fill = new Color(60, 64, 72);
-            }
+            Color fill = primary
+                ? accent
+                : new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), hovered ? 40 : 22);
+            if (!isEnabled()) fill = new Color(BORDER.getRed(), BORDER.getGreen(), BORDER.getBlue(), 180);
             g2.setColor(fill);
             g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-            g2.setColor(isEnabled() ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), hovered ? 220 : 130) : BORDER);
+            g2.setColor(isEnabled()
+                ? new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), hovered ? 220 : 130)
+                : BORDER);
             g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
             super.paintComponent(g);
             g2.dispose();
