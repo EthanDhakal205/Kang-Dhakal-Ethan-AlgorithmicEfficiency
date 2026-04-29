@@ -75,21 +75,19 @@ class PracticeDialog extends JDialog {
     private static Color BG, PANEL, CARD, BORDER, ACCENT, ACCENT2,
                          WARN, DANGER, TEXT, TEXT_DIM, TEXT_HINT, SURFACE;
 
-    // Static initializer: set dark defaults before any field initializers run
     static {
         assignColors(DARK);
     }
 
     private static void assignColors(Color[] t) {
-        BG       = t[0];  PANEL    = t[1];  CARD     = t[2];  BORDER  = t[3];
-        ACCENT   = t[4];  ACCENT2  = t[5];  WARN     = t[6];  DANGER  = t[7];
-        TEXT     = t[8];  TEXT_DIM = t[9];  TEXT_HINT = t[10]; SURFACE = t[11];
+        BG        = t[0];  PANEL    = t[1];  CARD      = t[2];  BORDER   = t[3];
+        ACCENT    = t[4];  ACCENT2  = t[5];  WARN      = t[6];  DANGER   = t[7];
+        TEXT      = t[8];  TEXT_DIM = t[9];  TEXT_HINT = t[10]; SURFACE  = t[11];
     }
 
     // ── Fonts ─────────────────────────────────────────────────────────────────
     private static final Font MONO   = new Font("JetBrains Mono", Font.PLAIN, 13);
     private static final Font MONO_B = new Font("JetBrains Mono", Font.BOLD,  13);
-    private static final Font SANS   = new Font("Segoe UI",       Font.PLAIN, 13);
     private static final Font SANS_B = new Font("Segoe UI",       Font.BOLD,  14);
     private static final Font TITLE  = new Font("Segoe UI",       Font.BOLD,  22);
     private static final Font SMALL  = new Font("Segoe UI",       Font.PLAIN, 11);
@@ -100,7 +98,6 @@ class PracticeDialog extends JDialog {
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
 
-    // Highlighter is recreated on theme change so its color updates too
     private Highlighter.HighlightPainter compilerHighlightPainter =
         new DefaultHighlighter.DefaultHighlightPainter(
             new Color(DANGER.getRed(), DANGER.getGreen(), DANGER.getBlue(), 70));
@@ -123,7 +120,11 @@ class PracticeDialog extends JDialog {
     private final JScrollPane editorScrollPane = createEditorScrollPane();
     private final JTabbedPane sideTabs         = createSideTabs();
 
+    // Panel refs needed for theme updates
     private PracticeCatalog.Problem currentProblem;
+    private JPanel supportedPanel;
+    private JPanel unsupportedPanel;
+    private JPanel editorToolbar;
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -160,13 +161,21 @@ class PracticeDialog extends JDialog {
     void applyTheme(boolean darkMode) {
         assignColors(darkMode ? DARK : LIGHT);
 
-        // Recreate the compiler highlight painter with the updated DANGER color
         compilerHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
             new Color(DANGER.getRed(), DANGER.getGreen(), DANGER.getBlue(), 70));
 
-        // Re-apply colors to all live components
+        // Dialog and card backgrounds
         getContentPane().setBackground(BG);
         cards.setBackground(BG);
+        if (supportedPanel   != null) supportedPanel.setBackground(BG);
+        if (unsupportedPanel != null) unsupportedPanel.setBackground(BG);
+
+        // Toolbar
+        if (editorToolbar != null) editorToolbar.setBackground(PANEL);
+
+        // Button accents
+        runTestsButton.setAccent(ACCENT);
+        resetCodeButton.setAccent(ACCENT2);
 
         // Text areas
         for (JTextArea area : new JTextArea[]{
@@ -191,7 +200,7 @@ class PracticeDialog extends JDialog {
         sideTabs.setBackground(PANEL);
         sideTabs.setForeground(TEXT);
 
-        // Scroll panes — update borders and viewport backgrounds
+        // Scroll panes
         refreshScrollPane(editorScrollPane);
         editorScrollPane.getRowHeader().setBackground(PANEL);
         for (int i = 0; i < sideTabs.getTabCount(); i++) {
@@ -199,28 +208,18 @@ class PracticeDialog extends JDialog {
             refreshPanelColors(tab);
         }
 
-        // Editor scroll border state
         clearCompilerMarkers();
-
         repaint();
         revalidate();
     }
 
-    // Recursively refreshes background/foreground/borders on panels and scroll panes
     private void refreshPanelColors(java.awt.Component c) {
         if (c instanceof JPanel panel) {
-            panel.setBackground(panel.isOpaque() ? CARD : panel.getBackground());
+            if (panel.isOpaque()) panel.setBackground(CARD);
             if (panel.getBorder() instanceof javax.swing.border.CompoundBorder) {
                 panel.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(BORDER),
                     new EmptyBorder(10, 10, 10, 10)));
-            }
-        }
-        if (c instanceof JLabel label) {
-            // preserve role-specific colors (ACCENT2 for signature, etc.)
-            Color fg = label.getForeground();
-            if (fg.equals(TEXT) || fg.equals(TEXT_DIM) || fg.equals(TEXT_HINT)) {
-                label.setForeground(fg); // already updated via direct refs above
             }
         }
         if (c instanceof JScrollPane sp) {
@@ -292,7 +291,8 @@ class PracticeDialog extends JDialog {
     // ── Panel builders ────────────────────────────────────────────────────────
 
     private JPanel buildSupportedPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        supportedPanel = new JPanel(new BorderLayout(10, 10));
+        JPanel panel = supportedPanel;
         panel.setBackground(BG);
         panel.setBorder(new EmptyBorder(14, 14, 14, 14));
 
@@ -330,23 +330,26 @@ class PracticeDialog extends JDialog {
     }
 
     private JPanel buildEditorPane() {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        JPanel panel = new JPanel(new BorderLayout(0, 0));
         panel.setOpaque(false);
 
-        JPanel toolbar = new JPanel(new BorderLayout());
-        toolbar.setOpaque(false);
+        // Opaque toolbar — prevents dark bleed-through from the split pane
+        editorToolbar = new JPanel(new BorderLayout());
+        editorToolbar.setOpaque(true);
+        editorToolbar.setBackground(PANEL);
+        editorToolbar.setBorder(new EmptyBorder(8, 0, 8, 0));
 
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         left.setOpaque(false);
         left.add(runTestsButton);
         left.add(resetCodeButton);
-        toolbar.add(left, BorderLayout.WEST);
+        editorToolbar.add(left, BorderLayout.WEST);
 
         statusLabel.setFont(SMALL);
         statusLabel.setForeground(TEXT_DIM);
-        toolbar.add(statusLabel, BorderLayout.EAST);
+        editorToolbar.add(statusLabel, BorderLayout.EAST);
 
-        panel.add(toolbar,          BorderLayout.NORTH);
+        panel.add(editorToolbar,    BorderLayout.NORTH);
         panel.add(editorScrollPane, BorderLayout.CENTER);
         return panel;
     }
@@ -356,9 +359,9 @@ class PracticeDialog extends JDialog {
         tabs.setFont(MONO_B);
         tabs.setBackground(PANEL);
         tabs.setForeground(TEXT);
-        tabs.addTab("Prompt",  sectionPanel("PROMPT",      createScrollPane(promptArea)));
-        tabs.addTab("Tests",   sectionPanel("TEST CASES",  createScrollPane(testsArea)));
-        tabs.addTab("Results", sectionPanel("RESULTS",     createScrollPane(resultsArea)));
+        tabs.addTab("Prompt",  sectionPanel("PROMPT",     createScrollPane(promptArea)));
+        tabs.addTab("Tests",   sectionPanel("TEST CASES", createScrollPane(testsArea)));
+        tabs.addTab("Results", sectionPanel("RESULTS",    createScrollPane(resultsArea)));
         tabs.addTab("Answer",  buildAnswerSection());
         return tabs;
     }
@@ -378,13 +381,14 @@ class PracticeDialog extends JDialog {
         header.add(label,          BorderLayout.WEST);
         header.add(answerDropdown, BorderLayout.CENTER);
 
-        panel.add(header,                         BorderLayout.NORTH);
-        panel.add(createScrollPane(answerArea),   BorderLayout.CENTER);
+        panel.add(header,                       BorderLayout.NORTH);
+        panel.add(createScrollPane(answerArea), BorderLayout.CENTER);
         return panel;
     }
 
     private JPanel buildUnsupportedPanel() {
-        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        unsupportedPanel = new JPanel(new BorderLayout(0, 10));
+        JPanel panel = unsupportedPanel;
         panel.setBackground(BG);
         panel.setBorder(new EmptyBorder(18, 18, 18, 18));
 
@@ -479,19 +483,19 @@ class PracticeDialog extends JDialog {
     }
 
     private JScrollPane createEditorScrollPane() {
-        JScrollPane scrollPane = createScrollPane(editorArea);
-        scrollPane.setRowHeaderView(lineNumberArea);
-        scrollPane.getRowHeader().setBackground(PANEL);
-        return scrollPane;
+        JScrollPane sp = createScrollPane(editorArea);
+        sp.setRowHeaderView(lineNumberArea);
+        sp.getRowHeader().setBackground(PANEL);
+        return sp;
     }
 
     private JScrollPane createScrollPane(JComponent component) {
-        JScrollPane scrollPane = new JScrollPane(component);
-        scrollPane.setBorder(BorderFactory.createLineBorder(BORDER));
-        scrollPane.getViewport().setBackground(SURFACE);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-        return scrollPane;
+        JScrollPane sp = new JScrollPane(component);
+        sp.setBorder(BorderFactory.createLineBorder(BORDER));
+        sp.getViewport().setBackground(SURFACE);
+        sp.getVerticalScrollBar().setUnitIncrement(16);
+        sp.getHorizontalScrollBar().setUnitIncrement(16);
+        return sp;
     }
 
     // ── Line numbers ──────────────────────────────────────────────────────────
@@ -671,7 +675,7 @@ class PracticeDialog extends JDialog {
     // ── ActionButton ──────────────────────────────────────────────────────────
 
     private static class ActionButton extends JButton {
-        private final Color accent;
+        private Color accent;           // not final — updated by setAccent()
         private final boolean primary;
         private boolean hovered;
 
@@ -691,6 +695,12 @@ class PracticeDialog extends JDialog {
                 @Override public void mouseEntered(MouseEvent e) { hovered = true;  repaint(); }
                 @Override public void mouseExited(MouseEvent e)  { hovered = false; repaint(); }
             });
+        }
+
+        void setAccent(Color newAccent) {
+            this.accent = newAccent;
+            setForeground(primary ? Color.WHITE : newAccent);
+            repaint();
         }
 
         @Override

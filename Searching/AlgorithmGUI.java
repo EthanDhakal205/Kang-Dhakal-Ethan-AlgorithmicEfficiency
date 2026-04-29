@@ -1053,6 +1053,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         if (practiceDialog == null) {
             practiceDialog = new PracticeDialog(this);
         }
+        practiceDialog.applyTheme(darkMode);
         practiceDialog.showForAlgorithm(state.selectedAlgo);
     }
 
