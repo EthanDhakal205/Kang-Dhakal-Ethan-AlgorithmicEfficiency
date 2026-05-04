@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -97,6 +98,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private JLabel timeLabel;
     private JLabel resultLabel;
     private JLabel algoLabel;
+    private JLabel complexityLabel;
     private JSlider speedSlider;
     private JButton runBtn;
     private JButton resetBtn;
@@ -121,7 +123,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         setTitle("Search and Sort Algorithm Visualizer");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1480, 780));
+        setMinimumSize(new Dimension(1220, 720));
+        setPreferredSize(new Dimension(1360, 800));
         getContentPane().setBackground(BG);
         setLayout(new BorderLayout());
 
@@ -163,7 +166,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         revalidate();
         repaint();
         refreshInputPanel();
-        themeBtn.setText(darkMode ? "☀ light" : "🌙 dark");
+        themeBtn.setText(themeButtonText());
     }
 
     private void startAnimLoop() {
@@ -302,7 +305,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     @Override
     public void setStatus(String msg) {
-        SwingUtilities.invokeLater(() -> statusLabel.setText(msg));
+        SwingUtilities.invokeLater(() -> {
+            statusLabel.setText(msg);
+            statusLabel.setToolTipText(msg);
+        });
     }
 
     @Override
@@ -327,17 +333,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildSearchSidebar() {
-        JPanel side = buildRailPanel("searchviz", ACCENT, false);
+        JPanel side = buildRailPanel("Search", "arrays, strings, graphs", ACCENT, false);
         JPanel list = buildRailList();
-        addCategory(list, "SEARCH / ARRAY", AnimState.ARRAY_SEARCH_ALGOS, ACCENT, false);
-        addCategory(list, "SEARCH / GRAPH", AnimState.GRAPH_ALGOS, ACCENT, false);
-        addCategory(list, "SEARCH / STRING", AnimState.STRING_ALGOS, ACCENT, false);
+        addCategory(list, "ARRAY SEARCH", AnimState.ARRAY_SEARCH_ALGOS, ACCENT, false);
+        addCategory(list, "GRAPH SEARCH", AnimState.GRAPH_ALGOS, ACCENT, false);
+        addCategory(list, "STRING SEARCH", AnimState.STRING_ALGOS, ACCENT, false);
         side.add(buildRailScroll(list), BorderLayout.CENTER);
         return side;
     }
 
     private JPanel buildSortSidebar() {
-        JPanel side = buildRailPanel("sortviz", ACCENT2, true);
+        JPanel side = buildRailPanel("Sort", "compare and rearrange", ACCENT2, true);
         side.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, BORDER));
         JPanel list = buildRailList();
         addCategory(list, "COMPARISON SORTS", AnimState.COMPARISON_SORT_ALGOS, ACCENT2, true);
@@ -347,18 +353,29 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return side;
     }
 
-    private JPanel buildRailPanel(String titleText, Color accent, boolean rightAligned) {
+    private JPanel buildRailPanel(String titleText, String subtitleText, Color accent, boolean rightAligned) {
         JPanel side = new JPanel(new BorderLayout());
         side.setBackground(PANEL);
-        side.setPreferredSize(new Dimension(232, 0));
+        side.setPreferredSize(new Dimension(224, 0));
         side.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, BORDER));
 
-        JLabel title = new JLabel(rightAligned ? titleText + "  " : "  " + titleText);
+        JPanel header = new JPanel(new BorderLayout(0, 4));
+        header.setOpaque(false);
+        header.setBorder(new EmptyBorder(22, 18, 18, 18));
+
+        JLabel title = new JLabel(titleText);
         title.setFont(TITLE);
         title.setForeground(accent);
         title.setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
-        title.setBorder(new EmptyBorder(24, 16, 20, 16));
-        side.add(title, BorderLayout.NORTH);
+
+        JLabel subtitle = new JLabel(subtitleText);
+        subtitle.setFont(SMALL);
+        subtitle.setForeground(TEXT_HINT);
+        subtitle.setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
+
+        header.add(title, BorderLayout.NORTH);
+        header.add(subtitle, BorderLayout.SOUTH);
+        side.add(header, BorderLayout.NORTH);
         return side;
     }
 
@@ -401,6 +418,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private void selectAlgorithm(String algo) {
         state.selectedAlgo = algo;
         algoLabel.setText(algo);
+        if (complexityLabel != null) {
+            complexityLabel.setText(complexityText(algo));
+        }
         refreshInputPanel();
     }
 
@@ -414,65 +434,94 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout());
+        JPanel bar = new JPanel(new BorderLayout(18, 0));
         bar.setBackground(PANEL);
         bar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
-            new EmptyBorder(12, 24, 12, 24)
+            new EmptyBorder(10, 22, 10, 22)
         ));
 
         algoLabel = new JLabel(state.selectedAlgo);
-        algoLabel.setFont(SANS_B);
+        algoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         algoLabel.setForeground(TEXT);
 
-        themeBtn = actionButton(darkMode ? "☀ light" : "🌙 dark", false);
+        complexityLabel = monoLabel(complexityText(state.selectedAlgo));
+
+        themeBtn = actionButton(themeButtonText(), false);
         themeBtn.addActionListener(e -> {
             darkMode = !darkMode;
             rebuildUI();
         });
 
-        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        westPanel.setOpaque(false);
-        westPanel.add(themeBtn);
-        westPanel.add(algoLabel);
-        bar.add(westPanel, BorderLayout.WEST);
+        JPanel titleBlock = new JPanel(new BorderLayout(0, 2));
+        titleBlock.setOpaque(false);
+        titleBlock.add(algoLabel, BorderLayout.NORTH);
+        titleBlock.add(complexityLabel, BorderLayout.SOUTH);
 
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        JPanel left = new JPanel(new BorderLayout(14, 0));
+        left.setOpaque(false);
+        left.add(themeBtn, BorderLayout.WEST);
+        left.add(titleBlock, BorderLayout.CENTER);
+        bar.add(left, BorderLayout.WEST);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         right.setOpaque(false);
 
-        captionToggle = styledCheckbox("captions");
+        captionToggle = styledCheckbox("Captions");
         captionToggle.setSelected(true);
         captionToggle.addActionListener(e -> state.showCaptions = captionToggle.isSelected());
 
-        JButton codeBtn = actionButton("code", false);
+        JButton codeBtn = actionButton("Code", false);
         codeBtn.addActionListener(e -> showCodeDialog());
 
-        JButton appsBtn = actionButton("applications", false);
+        JButton appsBtn = actionButton("Uses", false);
         appsBtn.addActionListener(e -> showApplicationsDialog());
 
-        JButton practiceBtn = actionButton("practice", false);
+        JButton practiceBtn = actionButton("Practice", false);
         practiceBtn.addActionListener(e -> openPracticeDialog());
 
-        JLabel speedLabel = new JLabel("speed");
+        JLabel speedLabel = new JLabel("Speed");
         speedLabel.setFont(SMALL);
         speedLabel.setForeground(TEXT_DIM);
 
         speedSlider = new JSlider(1, 5, 3);
         speedSlider.setBackground(PANEL);
-        speedSlider.setPreferredSize(new Dimension(100, 24));
+        speedSlider.setPreferredSize(new Dimension(112, 24));
         speedSlider.addChangeListener(e -> {
             int[] delays = {700, 450, 280, 130, 50};
             state.stepDelay = delays[speedSlider.getValue() - 1];
         });
 
-        right.add(captionToggle);
         right.add(codeBtn);
         right.add(appsBtn);
         right.add(practiceBtn);
+        right.add(captionToggle);
         right.add(speedLabel);
         right.add(speedSlider);
         bar.add(right, BorderLayout.EAST);
         return bar;
+    }
+
+    private String themeButtonText() {
+        return darkMode ? "Light" : "Dark";
+    }
+
+    private String complexityText(String algorithm) {
+        return algorithmFamily() + "  |  time " + AppData.getTimeComplexity(algorithm)
+            + "  |  space " + AppData.getSpaceComplexity(algorithm);
+    }
+
+    private String algorithmFamily() {
+        if (state.isSortAlgo()) {
+            return "Sorting";
+        }
+        if (state.isGraphAlgo()) {
+            return "Graph Search";
+        }
+        if (state.isStringAlgo()) {
+            return "String Search";
+        }
+        return "Array Search";
     }
 
     private JPanel buildCenter() {
@@ -500,9 +549,38 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return center;
     }
 
-    private JPanel buildArrayInput() {
+    private JPanel inputControls() {
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        controls.setOpaque(false);
+        return controls;
+    }
+
+    private JPanel buildInputCard(String titleText, String helperText, JPanel controls) {
         JPanel panel = roundPanel();
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        panel.setLayout(new BorderLayout(18, 0));
+        panel.setBorder(new EmptyBorder(12, 16, 12, 16));
+
+        JPanel labelGroup = new JPanel(new BorderLayout(0, 3));
+        labelGroup.setOpaque(false);
+        labelGroup.setPreferredSize(new Dimension(160, 42));
+
+        JLabel title = new JLabel(titleText);
+        title.setFont(SANS_B);
+        title.setForeground(TEXT);
+
+        JLabel helper = new JLabel(helperText);
+        helper.setFont(SMALL);
+        helper.setForeground(TEXT_HINT);
+
+        labelGroup.add(title, BorderLayout.NORTH);
+        labelGroup.add(helper, BorderLayout.SOUTH);
+        panel.add(labelGroup, BorderLayout.WEST);
+        panel.add(controls, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel buildArrayInput() {
+        JPanel controls = inputControls();
 
         arrayField = styledField(22);
         arrayField.setText("2, 5, 8, 11, 14, 19, 27, 33, 45");
@@ -511,7 +589,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         targetField.setText("19");
 
         arrayIgnoreCaseBox = styledCheckbox("ignore case");
-        JButton sampleBtn = actionButton("sample", false);
+        JButton sampleBtn = actionButton("Sample", false);
         sampleBtn.addActionListener(e -> applySearchSample());
 
         Runnable apply = () -> parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), false);
@@ -519,18 +597,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         addLiveListener(targetField, apply);
         arrayIgnoreCaseBox.addActionListener(e -> apply.run());
 
-        panel.add(dimLabel("array:"));
-        panel.add(arrayField);
-        panel.add(dimLabel("target:"));
-        panel.add(targetField);
-        panel.add(sampleBtn);
-        panel.add(arrayIgnoreCaseBox);
-        return panel;
+        controls.add(dimLabel("array"));
+        controls.add(arrayField);
+        controls.add(dimLabel("target"));
+        controls.add(targetField);
+        controls.add(sampleBtn);
+        controls.add(arrayIgnoreCaseBox);
+        return buildInputCard("Array Input", "comma-separated values", controls);
     }
 
     private JPanel buildGraphInput() {
-        JPanel panel = roundPanel();
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        JPanel controls = inputControls();
 
         JTextField startField = styledField(3);
         startField.setText("A");
@@ -553,20 +630,19 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         depthSpinner.addChangeListener(e -> apply.run());
         branchSpinner.addChangeListener(e -> apply.run());
 
-        panel.add(dimLabel("start:"));
-        panel.add(startField);
-        panel.add(dimLabel("target:"));
-        panel.add(targetGraphField);
-        panel.add(dimLabel("depth:"));
-        panel.add(depthSpinner);
-        panel.add(dimLabel("branches:"));
-        panel.add(branchSpinner);
-        return panel;
+        controls.add(dimLabel("start"));
+        controls.add(startField);
+        controls.add(dimLabel("target"));
+        controls.add(targetGraphField);
+        controls.add(dimLabel("depth"));
+        controls.add(depthSpinner);
+        controls.add(dimLabel("branches"));
+        controls.add(branchSpinner);
+        return buildInputCard("Graph Input", "generated tree graph", controls);
     }
 
     private JPanel buildStringInput() {
-        JPanel panel = roundPanel();
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        JPanel controls = inputControls();
 
         JTextField textField = styledField(28);
         textField.setText("the cat sat on the caterpillar");
@@ -585,17 +661,16 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         addLiveListener(patternField, apply);
         ignoreCaseBox.addActionListener(e -> apply.run());
 
-        panel.add(dimLabel("text:"));
-        panel.add(textField);
-        panel.add(dimLabel("pattern:"));
-        panel.add(patternField);
-        panel.add(ignoreCaseBox);
-        return panel;
+        controls.add(dimLabel("text"));
+        controls.add(textField);
+        controls.add(dimLabel("pattern"));
+        controls.add(patternField);
+        controls.add(ignoreCaseBox);
+        return buildInputCard("String Input", "text and pattern", controls);
     }
 
     private JPanel buildSortInput() {
-        JPanel panel = roundPanel();
-        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
+        JPanel controls = inputControls();
 
         sortArrayField = styledField(28);
         sortArrayField.setText("64, 34, 25, 12, 22, 11, 90, 45, 78, 3");
@@ -603,17 +678,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         Runnable apply = () -> parseSortInput(sortArrayField.getText(), false);
         addLiveListener(sortArrayField, apply);
 
-        JButton sampleBtn = actionButton("sample", false);
+        JButton sampleBtn = actionButton("Sample", false);
         sampleBtn.addActionListener(e -> {
             sortArrayField.setText(randomSortSample());
             parseSortInput(sortArrayField.getText(), false);
         });
 
-        panel.add(dimLabel("array:"));
-        panel.add(sortArrayField);
-        panel.add(sampleBtn);
-        panel.add(dimLabel("integers only"));
-        return panel;
+        controls.add(dimLabel("array"));
+        controls.add(sortArrayField);
+        controls.add(sampleBtn);
+        controls.add(dimLabel("integers only"));
+        return buildInputCard("Sort Input", "integers only", controls);
     }
 
     private void addLiveListener(JTextField field, Runnable onChange) {
@@ -636,20 +711,20 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildBottomBar() {
-        JPanel bar = new JPanel(new BorderLayout());
+        JPanel bar = new JPanel(new BorderLayout(18, 0));
         bar.setBackground(PANEL);
         bar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER),
-            new EmptyBorder(12, 24, 12, 24)
+            new EmptyBorder(10, 22, 10, 22)
         ));
 
-        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 24, 0));
+        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         stats.setOpaque(false);
-        cmpLabel = monoLabel("comparisons: -");
-        swapsLabel = monoLabel("swaps: -");
-        timeLabel = monoLabel("time: -");
-        resultLabel = monoLabel("result: -");
-        statusLabel = monoLabel("configure and press run");
+        cmpLabel = metricLabel("comparisons: -");
+        swapsLabel = metricLabel("swaps: -");
+        timeLabel = metricLabel("time: -");
+        resultLabel = metricLabel("result: -");
+        statusLabel = metricLabel("Ready - configure inputs, then run");
         stats.add(cmpLabel);
         stats.add(swapsLabel);
         stats.add(timeLabel);
@@ -659,14 +734,14 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttons.setOpaque(false);
-        resetBtn = actionButton("reset", false);
-        runBtn = actionButton("run", true);
+        resetBtn = actionButton("Reset", false);
+        runBtn = actionButton("Run", true);
         resetBtn.addActionListener(e -> {
-        if (state.running && algoThread != null) {
-            algoThread.interrupt();   // triggers InterruptedException in sleep()
-        } else {
-        resetVisuals();
-        }
+            if (state.running && algoThread != null) {
+                algoThread.interrupt();
+            } else {
+                resetVisuals();
+            }
         });
         runBtn.addActionListener(e -> {
             if (!state.running) {
@@ -680,60 +755,60 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private void runAlgorithm() {
-    if (state.running) {
-        return;
-    }
-
-    boolean ready = true;
-    if (state.isArrayAlgo()) {
-        ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
-    } else if (state.isSortAlgo()) {
-        ready = parseSortInput(sortArrayField.getText(), true);
-    }
-    if (!ready) {
-        return;
-    }
-
-    state.running = true;
-    runBtn.setEnabled(false);
-    resetBtn.setText("stop");       // <-- rename to stop
-    state.resetStats();
-
-    algoThread = new Thread(() -> {         // <-- store the thread
-        try {
-            if (state.isArrayAlgo()) {
-                runner.runArrayAlgo();
-            } else if (state.isGraphAlgo()) {
-                runner.runGraphAlgo();
-            } else if (state.isSortAlgo()) {
-                runner.runSortAlgo();
-            } else {
-                runner.runStringAlgo();
-            }
-            updateStats();
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-            SwingUtilities.invokeLater(() -> {   // <-- clean up on stop
-                state.running = false;
-                forceResetVisuals();
-            });
-        } catch (Exception ex) {
-            String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
-            SwingUtilities.invokeLater(() -> statusLabel.setText(message));
-            updateStats();
-        } finally {
-            state.running = false;
-            SwingUtilities.invokeLater(() -> {
-                runBtn.setEnabled(true);
-                resetBtn.setText("reset");  // <-- restore label
-            });
+        if (state.running) {
+            return;
         }
-    });
-    algoThread.start();
-}
+
+        boolean ready = true;
+        if (state.isArrayAlgo()) {
+            ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+        } else if (state.isSortAlgo()) {
+            ready = parseSortInput(sortArrayField.getText(), true);
+        }
+        if (!ready) {
+            return;
+        }
+
+        state.running = true;
+        runBtn.setEnabled(false);
+        resetBtn.setText("Stop");
+        statusLabel.setText("Running " + state.selectedAlgo + "...");
+        state.resetStats();
+
+        algoThread = new Thread(() -> {
+            try {
+                if (state.isArrayAlgo()) {
+                    runner.runArrayAlgo();
+                } else if (state.isGraphAlgo()) {
+                    runner.runGraphAlgo();
+                } else if (state.isSortAlgo()) {
+                    runner.runSortAlgo();
+                } else {
+                    runner.runStringAlgo();
+                }
+                updateStats();
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+                SwingUtilities.invokeLater(() -> {
+                    state.running = false;
+                    forceResetVisuals();
+                });
+            } catch (Exception ex) {
+                String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
+                SwingUtilities.invokeLater(() -> statusLabel.setText(message));
+                updateStats();
+            } finally {
+                state.running = false;
+                SwingUtilities.invokeLater(() -> {
+                    runBtn.setEnabled(true);
+                    resetBtn.setText("Reset");
+                });
+            }
+        });
+        algoThread.start();
+    }
 
     private void forceResetVisuals() {
-        
         state.resetStats();
         state.resetCaption();
         if (state.isArrayAlgo()) {
@@ -745,7 +820,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         } else {
             state.resetGraphState();
         }
-        if (statusLabel != null) statusLabel.setText("stopped - press run");
+        if (statusLabel != null) statusLabel.setText("Ready - press Run");
         if (cmpLabel != null) cmpLabel.setText("comparisons: -");
         if (swapsLabel != null) swapsLabel.setText("swaps: -");
         if (timeLabel != null) timeLabel.setText("time: -");
@@ -1128,6 +1203,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
             }
         };
         panel.setOpaque(false);
@@ -1145,6 +1222,27 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JLabel label = new JLabel(text);
         label.setFont(MONO);
         label.setForeground(TEXT_DIM);
+        return label;
+    }
+
+    private JLabel metricLabel(String text) {
+        JLabel label = new JLabel(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CARD);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        label.setFont(MONO);
+        label.setForeground(TEXT_DIM);
+        label.setOpaque(false);
+        label.setBorder(new EmptyBorder(6, 10, 6, 10));
         return label;
     }
 
@@ -1189,10 +1287,20 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JButton button = new JButton(label) {
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g;
+                Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(primary ? ACCENT : CARD);
+                boolean hovered = Boolean.TRUE.equals(getClientProperty("hovered"));
+                Color fill = primary ? (hovered ? ACCENT.brighter() : ACCENT) : (hovered ? ALGO_HOVER_BG : CARD);
+                Color stroke = primary ? ACCENT : (hovered ? ACCENT : BORDER);
+                if (!isEnabled()) {
+                    fill = PANEL;
+                    stroke = BORDER;
+                }
+                g2.setColor(fill);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(stroke);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
                 super.paintComponent(g);
             }
         };
@@ -1203,7 +1311,23 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        int width = label.length() >= 10 ? 120 : label.length() >= 6 ? 100 : 80;
+        button.putClientProperty("hovered", false);
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.putClientProperty("hovered", true);
+                button.setForeground(primary ? Color.WHITE : TEXT);
+                button.repaint();
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.putClientProperty("hovered", false);
+                button.setForeground(primary ? Color.WHITE : TEXT_DIM);
+                button.repaint();
+            }
+        });
+        int width = Math.max(82, Math.min(132, label.length() * 9 + 34));
         button.setPreferredSize(new Dimension(width, 34));
         return button;
     }
@@ -1227,8 +1351,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             setFocusPainted(false);
             setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setMaximumSize(new Dimension(232, 32));
-            setPreferredSize(new Dimension(232, 32));
+            setMaximumSize(new Dimension(224, 32));
+            setPreferredSize(new Dimension(224, 32));
             setBorder(new EmptyBorder(0, rightAligned ? 10 : 18, 0, rightAligned ? 18 : 10));
             addMouseListener(new MouseAdapter() {
                 @Override
