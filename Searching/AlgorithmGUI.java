@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -754,6 +753,107 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return bar;
     }
 
+    private static final java.util.Set<String> SORT_REQUIRED = new java.util.HashSet<>(java.util.Arrays.asList(
+        "Binary Search", "Ternary Search", "Jump Search",
+        "Interpolation Search", "Exponential Search", "Fibonacci Search"
+    ));
+
+    private boolean isSortRequired() {
+        return SORT_REQUIRED.contains(state.selectedAlgo);
+    }
+
+    private boolean isSortedAscending(Object[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            if (compareValues(arr[i], arr[i + 1]) > 0) return false;
+        }
+        return true;
+    }
+
+    private void promptSortAndApply() {
+        String[] sortOptions = {
+            "Bubble Sort", "Insertion Sort", "Selection Sort",
+            "Merge Sort", "Quick Sort", "Heap Sort"
+        };
+
+        JDialog dialog = new JDialog(this, "Array is not sorted", true);
+        dialog.getContentPane().setBackground(BG);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(PANEL);
+        header.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
+        new EmptyBorder(12, 20, 12, 20)));
+        JLabel title = new JLabel(state.selectedAlgo + " requires a sorted array");
+        title.setFont(SANS_B);
+        title.setForeground(TEXT);
+        JLabel subtitle = new JLabel("Choose a sorting algorithm to sort your array first");
+        subtitle.setFont(SMALL);
+        subtitle.setForeground(TEXT_DIM);
+        header.add(title, BorderLayout.WEST);
+        header.add(subtitle, BorderLayout.EAST);
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 14));
+        buttons.setBackground(BG);
+
+        for (String sort : sortOptions) {
+            JButton btn = actionButton(sort, false);
+            btn.setPreferredSize(new Dimension(140, 34));
+            btn.addActionListener(e -> {
+                dialog.dispose();
+                String originalAlgo = state.selectedAlgo;
+
+                // Temporarily become a sort algorithm so the visualizer renders correctly
+                state.selectedAlgo = sort;
+                parseSortInput(arrayField.getText(), false);
+
+                // Run the sort animation on the algo thread like a normal sort
+                state.running = true;
+                runBtn.setEnabled(false);
+                resetBtn.setText("stop");
+                state.resetStats();
+
+                algoThread = new Thread(() -> {
+                    try {
+                        runner.runSortAlgo();
+                    } catch (InterruptedException ignored) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        SwingUtilities.invokeLater(() -> {
+                            // Grab the sorted result from state.currentArray
+                            List<String> parts = new ArrayList<>();
+                            for (Object v : state.currentArray) parts.add(String.valueOf(v));
+                String newText = String.join(", ", parts);
+
+                            // Restore everything back to the search algorithm
+                            state.selectedAlgo = originalAlgo;
+                            arrayField.setText(newText);
+                            parseArrayInput(newText, targetField.getText(),
+                                arrayIgnoreCaseBox.isSelected(), false);
+                            refreshInputPanel();
+
+                            state.running = false;
+                            runBtn.setEnabled(true);
+                            resetBtn.setText("reset");
+                        });
+                    }
+                });
+                algoThread.start();
+            });
+            buttons.add(btn);
+        }
+
+        JButton cancelBtn = actionButton("cancel", false);
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        buttons.add(cancelBtn);
+
+        dialog.add(header, BorderLayout.NORTH);
+        dialog.add(buttons, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
     private void runAlgorithm() {
         if (state.running) {
             return;
@@ -762,6 +862,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         boolean ready = true;
         if (state.isArrayAlgo()) {
             ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+            if (ready && isSortRequired() && !isSortedAscending(state.currentArray)) {
+                promptSortAndApply();
+                return;
+            }
         } else if (state.isSortAlgo()) {
             ready = parseSortInput(sortArrayField.getText(), true);
         }
