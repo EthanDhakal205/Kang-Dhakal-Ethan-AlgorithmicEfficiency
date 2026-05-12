@@ -97,7 +97,6 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private JLabel timeLabel;
     private JLabel resultLabel;
     private JLabel algoLabel;
-    private JLabel complexityLabel;
     private JSlider speedSlider;
     private JButton runBtn;
     private JButton resetBtn;
@@ -122,8 +121,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         setTitle("Search and Sort Algorithm Visualizer");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(1220, 720));
-        setPreferredSize(new Dimension(1360, 800));
+        setMinimumSize(new Dimension(1480, 780));
         getContentPane().setBackground(BG);
         setLayout(new BorderLayout());
 
@@ -165,7 +163,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         revalidate();
         repaint();
         refreshInputPanel();
-        themeBtn.setText(themeButtonText());
+        themeBtn.setText(darkMode ? "☀ light" : "🌙 dark");
     }
 
     private void startAnimLoop() {
@@ -304,10 +302,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     @Override
     public void setStatus(String msg) {
-        SwingUtilities.invokeLater(() -> {
-            statusLabel.setText(msg);
-            statusLabel.setToolTipText(msg);
-        });
+        SwingUtilities.invokeLater(() -> statusLabel.setText(msg));
     }
 
     @Override
@@ -332,17 +327,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildSearchSidebar() {
-        JPanel side = buildRailPanel("Search", "arrays, strings, graphs", ACCENT, false);
+        JPanel side = buildRailPanel("searchviz", ACCENT, false);
         JPanel list = buildRailList();
-        addCategory(list, "ARRAY SEARCH", AnimState.ARRAY_SEARCH_ALGOS, ACCENT, false);
-        addCategory(list, "GRAPH SEARCH", AnimState.GRAPH_ALGOS, ACCENT, false);
-        addCategory(list, "STRING SEARCH", AnimState.STRING_ALGOS, ACCENT, false);
+        addCategory(list, "SEARCH / ARRAY", AnimState.ARRAY_SEARCH_ALGOS, ACCENT, false);
+        addCategory(list, "SEARCH / GRAPH", AnimState.GRAPH_ALGOS, ACCENT, false);
+        addCategory(list, "SEARCH / STRING", AnimState.STRING_ALGOS, ACCENT, false);
         side.add(buildRailScroll(list), BorderLayout.CENTER);
         return side;
     }
 
     private JPanel buildSortSidebar() {
-        JPanel side = buildRailPanel("Sort", "compare and rearrange", ACCENT2, true);
+        JPanel side = buildRailPanel("sortviz", ACCENT2, true);
         side.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, BORDER));
         JPanel list = buildRailList();
         addCategory(list, "COMPARISON SORTS", AnimState.COMPARISON_SORT_ALGOS, ACCENT2, true);
@@ -352,29 +347,18 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return side;
     }
 
-    private JPanel buildRailPanel(String titleText, String subtitleText, Color accent, boolean rightAligned) {
+    private JPanel buildRailPanel(String titleText, Color accent, boolean rightAligned) {
         JPanel side = new JPanel(new BorderLayout());
         side.setBackground(PANEL);
-        side.setPreferredSize(new Dimension(224, 0));
+        side.setPreferredSize(new Dimension(232, 0));
         side.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, BORDER));
 
-        JPanel header = new JPanel(new BorderLayout(0, 4));
-        header.setOpaque(false);
-        header.setBorder(new EmptyBorder(22, 18, 18, 18));
-
-        JLabel title = new JLabel(titleText);
+        JLabel title = new JLabel(rightAligned ? titleText + "  " : "  " + titleText);
         title.setFont(TITLE);
         title.setForeground(accent);
         title.setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
-
-        JLabel subtitle = new JLabel(subtitleText);
-        subtitle.setFont(SMALL);
-        subtitle.setForeground(TEXT_HINT);
-        subtitle.setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
-
-        header.add(title, BorderLayout.NORTH);
-        header.add(subtitle, BorderLayout.SOUTH);
-        side.add(header, BorderLayout.NORTH);
+        title.setBorder(new EmptyBorder(24, 16, 20, 16));
+        side.add(title, BorderLayout.NORTH);
         return side;
     }
 
@@ -417,9 +401,6 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private void selectAlgorithm(String algo) {
         state.selectedAlgo = algo;
         algoLabel.setText(algo);
-        if (complexityLabel != null) {
-            complexityLabel.setText(complexityText(algo));
-        }
         refreshInputPanel();
     }
 
@@ -433,94 +414,65 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildTopBar() {
-        JPanel bar = new JPanel(new BorderLayout(18, 0));
+        JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(PANEL);
         bar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
-            new EmptyBorder(10, 22, 10, 22)
+            new EmptyBorder(12, 24, 12, 24)
         ));
 
         algoLabel = new JLabel(state.selectedAlgo);
-        algoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        algoLabel.setFont(SANS_B);
         algoLabel.setForeground(TEXT);
 
-        complexityLabel = monoLabel(complexityText(state.selectedAlgo));
-
-        themeBtn = actionButton(themeButtonText(), false);
+        themeBtn = actionButton(darkMode ? "☀ light" : "🌙 dark", false);
         themeBtn.addActionListener(e -> {
             darkMode = !darkMode;
             rebuildUI();
         });
 
-        JPanel titleBlock = new JPanel(new BorderLayout(0, 2));
-        titleBlock.setOpaque(false);
-        titleBlock.add(algoLabel, BorderLayout.NORTH);
-        titleBlock.add(complexityLabel, BorderLayout.SOUTH);
+        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        westPanel.setOpaque(false);
+        westPanel.add(themeBtn);
+        westPanel.add(algoLabel);
+        bar.add(westPanel, BorderLayout.WEST);
 
-        JPanel left = new JPanel(new BorderLayout(14, 0));
-        left.setOpaque(false);
-        left.add(themeBtn, BorderLayout.WEST);
-        left.add(titleBlock, BorderLayout.CENTER);
-        bar.add(left, BorderLayout.WEST);
-
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
 
-        captionToggle = styledCheckbox("Captions");
+        captionToggle = styledCheckbox("captions");
         captionToggle.setSelected(true);
         captionToggle.addActionListener(e -> state.showCaptions = captionToggle.isSelected());
 
-        JButton codeBtn = actionButton("Code", false);
+        JButton codeBtn = actionButton("code", false);
         codeBtn.addActionListener(e -> showCodeDialog());
 
-        JButton appsBtn = actionButton("Uses", false);
-        appsBtn.addActionListener(e -> showApplicationsDialog());
+        JButton appsBtn = actionButton("applications", false);
+        appsBtn.addActionListener(e -> showAppsMenu(appsBtn));
 
-        JButton practiceBtn = actionButton("Practice", false);
+        JButton practiceBtn = actionButton("practice", false);
         practiceBtn.addActionListener(e -> openPracticeDialog());
 
-        JLabel speedLabel = new JLabel("Speed");
+        JLabel speedLabel = new JLabel("speed");
         speedLabel.setFont(SMALL);
         speedLabel.setForeground(TEXT_DIM);
 
         speedSlider = new JSlider(1, 5, 3);
         speedSlider.setBackground(PANEL);
-        speedSlider.setPreferredSize(new Dimension(112, 24));
+        speedSlider.setPreferredSize(new Dimension(100, 24));
         speedSlider.addChangeListener(e -> {
             int[] delays = {700, 450, 280, 130, 50};
             state.stepDelay = delays[speedSlider.getValue() - 1];
         });
 
+        right.add(captionToggle);
         right.add(codeBtn);
         right.add(appsBtn);
         right.add(practiceBtn);
-        right.add(captionToggle);
         right.add(speedLabel);
         right.add(speedSlider);
         bar.add(right, BorderLayout.EAST);
         return bar;
-    }
-
-    private String themeButtonText() {
-        return darkMode ? "Light" : "Dark";
-    }
-
-    private String complexityText(String algorithm) {
-        return algorithmFamily() + "  |  time " + AppData.getTimeComplexity(algorithm)
-            + "  |  space " + AppData.getSpaceComplexity(algorithm);
-    }
-
-    private String algorithmFamily() {
-        if (state.isSortAlgo()) {
-            return "Sorting";
-        }
-        if (state.isGraphAlgo()) {
-            return "Graph Search";
-        }
-        if (state.isStringAlgo()) {
-            return "String Search";
-        }
-        return "Array Search";
     }
 
     private JPanel buildCenter() {
@@ -548,38 +500,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return center;
     }
 
-    private JPanel inputControls() {
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        controls.setOpaque(false);
-        return controls;
-    }
-
-    private JPanel buildInputCard(String titleText, String helperText, JPanel controls) {
-        JPanel panel = roundPanel();
-        panel.setLayout(new BorderLayout(18, 0));
-        panel.setBorder(new EmptyBorder(12, 16, 12, 16));
-
-        JPanel labelGroup = new JPanel(new BorderLayout(0, 3));
-        labelGroup.setOpaque(false);
-        labelGroup.setPreferredSize(new Dimension(160, 42));
-
-        JLabel title = new JLabel(titleText);
-        title.setFont(SANS_B);
-        title.setForeground(TEXT);
-
-        JLabel helper = new JLabel(helperText);
-        helper.setFont(SMALL);
-        helper.setForeground(TEXT_HINT);
-
-        labelGroup.add(title, BorderLayout.NORTH);
-        labelGroup.add(helper, BorderLayout.SOUTH);
-        panel.add(labelGroup, BorderLayout.WEST);
-        panel.add(controls, BorderLayout.CENTER);
-        return panel;
-    }
-
     private JPanel buildArrayInput() {
-        JPanel controls = inputControls();
+        JPanel panel = roundPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
 
         arrayField = styledField(22);
         arrayField.setText("2, 5, 8, 11, 14, 19, 27, 33, 45");
@@ -588,7 +511,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         targetField.setText("19");
 
         arrayIgnoreCaseBox = styledCheckbox("ignore case");
-        JButton sampleBtn = actionButton("Sample", false);
+        JButton sampleBtn = actionButton("sample", false);
         sampleBtn.addActionListener(e -> applySearchSample());
 
         Runnable apply = () -> parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), false);
@@ -596,17 +519,18 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         addLiveListener(targetField, apply);
         arrayIgnoreCaseBox.addActionListener(e -> apply.run());
 
-        controls.add(dimLabel("array"));
-        controls.add(arrayField);
-        controls.add(dimLabel("target"));
-        controls.add(targetField);
-        controls.add(sampleBtn);
-        controls.add(arrayIgnoreCaseBox);
-        return buildInputCard("Array Input", "comma-separated values", controls);
+        panel.add(dimLabel("array:"));
+        panel.add(arrayField);
+        panel.add(dimLabel("target:"));
+        panel.add(targetField);
+        panel.add(sampleBtn);
+        panel.add(arrayIgnoreCaseBox);
+        return panel;
     }
 
     private JPanel buildGraphInput() {
-        JPanel controls = inputControls();
+        JPanel panel = roundPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
 
         JTextField startField = styledField(3);
         startField.setText("A");
@@ -629,19 +553,20 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         depthSpinner.addChangeListener(e -> apply.run());
         branchSpinner.addChangeListener(e -> apply.run());
 
-        controls.add(dimLabel("start"));
-        controls.add(startField);
-        controls.add(dimLabel("target"));
-        controls.add(targetGraphField);
-        controls.add(dimLabel("depth"));
-        controls.add(depthSpinner);
-        controls.add(dimLabel("branches"));
-        controls.add(branchSpinner);
-        return buildInputCard("Graph Input", "generated tree graph", controls);
+        panel.add(dimLabel("start:"));
+        panel.add(startField);
+        panel.add(dimLabel("target:"));
+        panel.add(targetGraphField);
+        panel.add(dimLabel("depth:"));
+        panel.add(depthSpinner);
+        panel.add(dimLabel("branches:"));
+        panel.add(branchSpinner);
+        return panel;
     }
 
     private JPanel buildStringInput() {
-        JPanel controls = inputControls();
+        JPanel panel = roundPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
 
         JTextField textField = styledField(28);
         textField.setText("the cat sat on the caterpillar");
@@ -660,16 +585,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         addLiveListener(patternField, apply);
         ignoreCaseBox.addActionListener(e -> apply.run());
 
-        controls.add(dimLabel("text"));
-        controls.add(textField);
-        controls.add(dimLabel("pattern"));
-        controls.add(patternField);
-        controls.add(ignoreCaseBox);
-        return buildInputCard("String Input", "text and pattern", controls);
+        panel.add(dimLabel("text:"));
+        panel.add(textField);
+        panel.add(dimLabel("pattern:"));
+        panel.add(patternField);
+        panel.add(ignoreCaseBox);
+        return panel;
     }
 
     private JPanel buildSortInput() {
-        JPanel controls = inputControls();
+        JPanel panel = roundPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 12, 8));
 
         sortArrayField = styledField(28);
         sortArrayField.setText("64, 34, 25, 12, 22, 11, 90, 45, 78, 3");
@@ -677,17 +603,17 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         Runnable apply = () -> parseSortInput(sortArrayField.getText(), false);
         addLiveListener(sortArrayField, apply);
 
-        JButton sampleBtn = actionButton("Sample", false);
+        JButton sampleBtn = actionButton("sample", false);
         sampleBtn.addActionListener(e -> {
             sortArrayField.setText(randomSortSample());
             parseSortInput(sortArrayField.getText(), false);
         });
 
-        controls.add(dimLabel("array"));
-        controls.add(sortArrayField);
-        controls.add(sampleBtn);
-        controls.add(dimLabel("integers only"));
-        return buildInputCard("Sort Input", "integers only", controls);
+        panel.add(dimLabel("array:"));
+        panel.add(sortArrayField);
+        panel.add(sampleBtn);
+        panel.add(dimLabel("integers only"));
+        return panel;
     }
 
     private void addLiveListener(JTextField field, Runnable onChange) {
@@ -710,20 +636,20 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildBottomBar() {
-        JPanel bar = new JPanel(new BorderLayout(18, 0));
+        JPanel bar = new JPanel(new BorderLayout());
         bar.setBackground(PANEL);
         bar.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, BORDER),
-            new EmptyBorder(10, 22, 10, 22)
+            new EmptyBorder(12, 24, 12, 24)
         ));
 
-        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 24, 0));
         stats.setOpaque(false);
-        cmpLabel = metricLabel("comparisons: -");
-        swapsLabel = metricLabel("swaps: -");
-        timeLabel = metricLabel("time: -");
-        resultLabel = metricLabel("result: -");
-        statusLabel = metricLabel("Ready - configure inputs, then run");
+        cmpLabel = monoLabel("comparisons: -");
+        swapsLabel = monoLabel("swaps: -");
+        timeLabel = monoLabel("time: -");
+        resultLabel = monoLabel("result: -");
+        statusLabel = monoLabel("configure and press run");
         stats.add(cmpLabel);
         stats.add(swapsLabel);
         stats.add(timeLabel);
@@ -733,14 +659,14 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttons.setOpaque(false);
-        resetBtn = actionButton("Reset", false);
-        runBtn = actionButton("Run", true);
+        resetBtn = actionButton("reset", false);
+        runBtn = actionButton("run", true);
         resetBtn.addActionListener(e -> {
-            if (state.running && algoThread != null) {
-                algoThread.interrupt();
-            } else {
-                resetVisuals();
-            }
+        if (state.running && algoThread != null) {
+            algoThread.interrupt();   // triggers InterruptedException in sleep()
+        } else {
+        resetVisuals();
+        }
         });
         runBtn.addActionListener(e -> {
             if (!state.running) {
@@ -753,6 +679,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return bar;
     }
 
+    // ── Sort-required search detection & prompt ───────────────────
     private static final java.util.Set<String> SORT_REQUIRED = new java.util.HashSet<>(java.util.Arrays.asList(
         "Binary Search", "Ternary Search", "Jump Search",
         "Interpolation Search", "Exponential Search", "Fibonacci Search"
@@ -782,8 +709,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(PANEL);
         header.setBorder(BorderFactory.createCompoundBorder(
-        BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
-        new EmptyBorder(12, 20, 12, 20)));
+            BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
+            new EmptyBorder(12, 20, 12, 20)
+        ));
         JLabel title = new JLabel(state.selectedAlgo + " requires a sorted array");
         title.setFont(SANS_B);
         title.setForeground(TEXT);
@@ -823,7 +751,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                             // Grab the sorted result from state.currentArray
                             List<String> parts = new ArrayList<>();
                             for (Object v : state.currentArray) parts.add(String.valueOf(v));
-                String newText = String.join(", ", parts);
+                            String newText = String.join(", ", parts);
 
                             // Restore everything back to the search algorithm
                             state.selectedAlgo = originalAlgo;
@@ -854,65 +782,348 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         dialog.setVisible(true);
     }
 
-    private void runAlgorithm() {
-        if (state.running) {
-            return;
+    // ── Applications dropdown menu ────────────────────────────────
+    private void showAppsMenu(JButton anchor) {
+        javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
+        menu.setBackground(CARD);
+        menu.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+
+        String[] options = {
+            "Real-World Applications",
+            "Algorithm Comparison",
+            "Compatibility Matrix",
+            "Compatibility Notes",
+            "Use Case Profiles"
+        };
+
+        for (String option : options) {
+            javax.swing.JMenuItem item = new javax.swing.JMenuItem(option);
+            item.setBackground(CARD);
+            item.setForeground(TEXT);
+            item.setFont(SANS);
+            item.setBorder(new EmptyBorder(8, 16, 8, 16));
+            item.addActionListener(e -> handleAppsMenuSelection(option));
+            menu.add(item);
         }
 
-        boolean ready = true;
-        if (state.isArrayAlgo()) {
-            ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
-            if (ready && isSortRequired() && !isSortedAscending(state.currentArray)) {
-                promptSortAndApply();
-                return;
-            }
-        } else if (state.isSortAlgo()) {
-            ready = parseSortInput(sortArrayField.getText(), true);
-        }
-        if (!ready) {
-            return;
-        }
-
-        state.running = true;
-        runBtn.setEnabled(false);
-        resetBtn.setText("Stop");
-        statusLabel.setText("Running " + state.selectedAlgo + "...");
-        state.resetStats();
-
-        algoThread = new Thread(() -> {
-            try {
-                if (state.isArrayAlgo()) {
-                    runner.runArrayAlgo();
-                } else if (state.isGraphAlgo()) {
-                    runner.runGraphAlgo();
-                } else if (state.isSortAlgo()) {
-                    runner.runSortAlgo();
-                } else {
-                    runner.runStringAlgo();
-                }
-                updateStats();
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-                SwingUtilities.invokeLater(() -> {
-                    state.running = false;
-                    forceResetVisuals();
-                });
-            } catch (Exception ex) {
-                String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
-                SwingUtilities.invokeLater(() -> statusLabel.setText(message));
-                updateStats();
-            } finally {
-                state.running = false;
-                SwingUtilities.invokeLater(() -> {
-                    runBtn.setEnabled(true);
-                    resetBtn.setText("Reset");
-                });
-            }
-        });
-        algoThread.start();
+        menu.show(anchor, 0, anchor.getHeight());
     }
 
+    private void handleAppsMenuSelection(String option) {
+        switch (option) {
+            case "Real-World Applications" -> showApplicationsDialog();
+            case "Algorithm Comparison"    -> showSpreadsheetSheet(0);
+            case "Compatibility Matrix"    -> showSpreadsheetSheet(1);
+            case "Compatibility Notes"     -> showSpreadsheetSheet(2);
+            case "Use Case Profiles"       -> showSpreadsheetSheet(3);
+        }
+    }
+
+    private void showSpreadsheetSheet(int sheetIndex) {
+        String[] sheetTitles = {
+            "Algorithm Comparison",
+            "Compatibility Matrix",
+            "Compatibility Notes",
+            "Use Case Profiles"
+        };
+
+        String[][][] sheetColumns = {
+            {{"Algorithm","160"},{"Type","100"},{"Category","110"},{"Best Case","110"},
+             {"Average Case","110"},{"Worst Case","110"},{"Space","90"},{"Stable","80"},
+             {"Sorted Input Req.","120"},{"In-Place","80"},{"Notes","400"}},
+            null,
+            {{"Sort Algorithm","140"},{"Search Algorithm","140"},{"Rating","80"},{"Notes","500"}},
+            {{"Use Case / Scenario","260"},{"Recommended Pairing","220"},{"Why","500"}}
+        };
+
+        String[][][] sheetData = {
+            buildComparisonData(),
+            null,
+            buildCompatNotesData(),
+            buildUseCaseData()
+        };
+
+        JDialog dialog = new JDialog(this, sheetTitles[sheetIndex], false);
+        dialog.getContentPane().setBackground(BG);
+        dialog.setLayout(new BorderLayout());
+        dialog.setPreferredSize(new Dimension(1100, 640));
+
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(PANEL);
+        header.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
+            new EmptyBorder(12, 20, 12, 20)
+        ));
+        JLabel heading = new JLabel(sheetTitles[sheetIndex]);
+        heading.setFont(SANS_B);
+        heading.setForeground(TEXT);
+        header.add(heading, BorderLayout.WEST);
+        dialog.add(header, BorderLayout.NORTH);
+
+        JPanel content;
+        if (sheetIndex == 1) {
+            content = buildCompatibilityMatrixPanel();
+        } else {
+            content = buildTablePanel(sheetColumns[sheetIndex], sheetData[sheetIndex]);
+        }
+
+        JScrollPane scroll = new JScrollPane(content);
+        scroll.setBorder(null);
+        scroll.getViewport().setBackground(BG);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        scroll.getHorizontalScrollBar().setUnitIncrement(16);
+        dialog.add(scroll, BorderLayout.CENTER);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private JPanel buildTablePanel(String[][] columns, String[][] data) {
+        javax.swing.JTable table = new javax.swing.JTable(
+            new javax.swing.table.DefaultTableModel(data,
+                java.util.Arrays.stream(columns).map(c -> c[0]).toArray()) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        });
+        table.setBackground(new Color(17, 19, 24));
+        table.setForeground(TEXT);
+        table.setFont(SANS);
+        table.setRowHeight(26);
+        table.setGridColor(BORDER);
+        table.getTableHeader().setBackground(new Color(26, 31, 46));
+        table.getTableHeader().setForeground(TEXT);
+        table.getTableHeader().setFont(SANS_B);
+        table.setSelectionBackground(new Color(28, 38, 70));
+        table.setSelectionForeground(TEXT);
+        for (int i = 0; i < columns.length; i++) {
+            table.getColumnModel().getColumn(i)
+                 .setPreferredWidth(Integer.parseInt(columns[i][1]));
+        }
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(17, 19, 24));
+        panel.add(table.getTableHeader(), BorderLayout.NORTH);
+        panel.add(table, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel buildCompatibilityMatrixPanel() {
+        String[] searches = {"Linear","Binary","Ternary","Jump","Interpolation",
+                             "Exponential","Fibonacci","BFS","DFS","KMP","Rabin-Karp"};
+        String[] sorts    = {"Bubble","Insertion","Selection","Gnome","Merge",
+                             "Quick","Heap","Tim","Bogo","Radix"};
+        String[][] ratings = {
+            {"★★★","★☆☆","★☆☆","★☆☆","★☆☆","★☆☆","★☆☆","—","—","—","—"},
+            {"★★★","★★☆","★☆☆","★★☆","★★☆","★☆☆","★☆☆","—","—","—","—"},
+            {"★★☆","★☆☆","★☆☆","★☆☆","★☆☆","✗","★☆☆","—","—","—","—"},
+            {"★★☆","★☆☆","★☆☆","★☆☆","✗","✗","✗","—","—","—","—"},
+            {"★★☆","★★★","★★☆","★★★","★★★","★★★","★★☆","—","—","—","—"},
+            {"★★☆","★★★","★★☆","★★★","★★★","★★★","★★☆","—","—","—","—"},
+            {"★★☆","★★★","★★☆","★★☆","★★☆","★★★","★★☆","—","—","—","—"},
+            {"★★☆","★★★","★★☆","★★★","★★★","★★★","★★☆","—","—","—","—"},
+            {"★★☆","✗","✗","✗","✗","✗","✗","—","—","—","—"},
+            {"★★☆","★★★","★★☆","★★★","★★★","★★★","★★☆","—","—","—","—"},
+        };
+
+        int CELL = 72, ROW_HDR = 110, HDR_H = 36, ROW_H = 28;
+        int cols = searches.length, rows = sorts.length;
+        int totalW = ROW_HDR + cols * CELL;
+        int totalH = HDR_H + rows * ROW_H;
+
+        JPanel panel = new JPanel(null);
+        panel.setBackground(new Color(17, 19, 24));
+        panel.setPreferredSize(new Dimension(totalW, totalH));
+
+        for (int c = 0; c < cols; c++) {
+            JLabel lbl = new JLabel(searches[c], SwingConstants.CENTER);
+            lbl.setFont(SMALL);
+            lbl.setForeground(new Color(52, 211, 153));
+            lbl.setOpaque(true);
+            lbl.setBackground(new Color(26, 31, 46));
+            lbl.setBounds(ROW_HDR + c * CELL, 0, CELL, HDR_H);
+            panel.add(lbl);
+        }
+
+        for (int r = 0; r < rows; r++) {
+            JLabel rh = new JLabel("  " + sorts[r]);
+            rh.setFont(SMALL);
+            rh.setForeground(new Color(82, 130, 255));
+            rh.setOpaque(true);
+            rh.setBackground(new Color(26, 31, 46));
+            rh.setBounds(0, HDR_H + r * ROW_H, ROW_HDR, ROW_H);
+            panel.add(rh);
+
+            for (int c = 0; c < cols; c++) {
+                String rating = ratings[r][c];
+                Color bg, fg;
+                switch (rating) {
+                    case "★★★" -> { bg = new Color(13, 38, 32);  fg = new Color(52, 211, 153); }
+                    case "★★☆" -> { bg = new Color(13, 33, 55);  fg = new Color(82, 130, 255); }
+                    case "★☆☆" -> { bg = new Color(42, 26, 16);  fg = new Color(251, 146, 60); }
+                    case "✗"   -> { bg = new Color(42, 16, 16);  fg = new Color(248, 113, 113); }
+                    default    -> { bg = new Color(17, 19, 24);  fg = new Color(42, 47, 61); }
+                }
+                JLabel cell = new JLabel(rating, SwingConstants.CENTER);
+                cell.setFont(SANS_B);
+                cell.setForeground(fg);
+                cell.setOpaque(true);
+                cell.setBackground(bg);
+                cell.setBorder(BorderFactory.createLineBorder(new Color(42, 47, 61), 1));
+                cell.setBounds(ROW_HDR + c * CELL, HDR_H + r * ROW_H, CELL, ROW_H);
+                panel.add(cell);
+            }
+        }
+        return panel;
+    }
+
+    private String[][] buildComparisonData() {
+        return new String[][] {
+            {"Bubble Sort","Sort","Comparison","O(n)","O(n²)","O(n²)","O(1)","Yes","N/A","Yes","Early exit if no swaps. Simple but slow on large data."},
+            {"Insertion Sort","Sort","Comparison","O(n)","O(n²)","O(n²)","O(1)","Yes","N/A","Yes","Very fast on nearly-sorted or small arrays. Used inside Tim Sort."},
+            {"Selection Sort","Sort","Comparison","O(n²)","O(n²)","O(n²)","O(1)","No","N/A","Yes","Fewest swaps of any simple sort. Always O(n²) comparisons."},
+            {"Gnome Sort","Sort","Comparison","O(n)","O(n²)","O(n²)","O(1)","Yes","N/A","Yes","Like Insertion Sort but uses swaps. Educational only."},
+            {"Merge Sort","Sort","Comparison","O(n log n)","O(n log n)","O(n log n)","O(n)","Yes","N/A","No","Guaranteed O(n log n). Stable. Requires O(n) extra memory."},
+            {"Quick Sort","Sort","Comparison","O(n log n)","O(n log n)","O(n²)","O(log n)","No","N/A","Yes","Fast in practice. Worst case on sorted input with bad pivot."},
+            {"Heap Sort","Sort","Comparison","O(n log n)","O(n log n)","O(n log n)","O(1)","No","N/A","Yes","Guaranteed O(n log n) with O(1) space. Not cache-friendly."},
+            {"Tim Sort","Sort","Hybrid","O(n)","O(n log n)","O(n log n)","O(n)","Yes","N/A","No","Used in Java and Python. Exploits natural runs in real data."},
+            {"Bogo Sort","Sort","Novelty","O(n)","O((n+1)!)","O(∞)","O(1)","No","N/A","Yes","Randomly shuffles until sorted. Never use in practice."},
+            {"Radix Sort","Sort","Distribution","O(nk)","O(nk)","O(nk)","O(n+k)","Yes","N/A","No","Non-comparison sort. Integers only (non-negative)."},
+            {"Linear Search","Search","Array","O(1)","O(n)","O(n)","O(1)","N/A","No","N/A","No sorting required. Best for small or unsorted arrays."},
+            {"Binary Search","Search","Array","O(1)","O(log n)","O(log n)","O(1)","N/A","Yes","N/A","Halves the search range each step. Array must be sorted."},
+            {"Ternary Search","Search","Array","O(1)","O(log₃ n)","O(log₃ n)","O(1)","N/A","Yes","N/A","Splits into 3 parts. More comparisons per step than Binary."},
+            {"Jump Search","Search","Array","O(1)","O(√n)","O(√n)","O(1)","N/A","Yes","N/A","Jumps √n steps then linear scans. Between Linear and Binary."},
+            {"Interpolation Search","Search","Array","O(1)","O(log log n)","O(n)","O(1)","N/A","Yes","N/A","Best on uniformly distributed data. Degrades on skewed input."},
+            {"Exponential Search","Search","Array","O(1)","O(log n)","O(log n)","O(1)","N/A","Yes","N/A","Finds range by doubling. Good for large or unbounded arrays."},
+            {"Fibonacci Search","Search","Array","O(1)","O(log n)","O(log n)","O(1)","N/A","Yes","N/A","Uses Fibonacci numbers instead of division."},
+            {"BFS","Search","Graph","O(1)","O(V+E)","O(V+E)","O(V)","N/A","No","N/A","Level-by-level. Guarantees shortest path in unweighted graphs."},
+            {"DFS","Search","Graph","O(1)","O(V+E)","O(V+E)","O(V)","N/A","No","N/A","Goes deep before backtracking. Does NOT guarantee shortest path."},
+            {"KMP Search","Search","String","O(n)","O(n+m)","O(n+m)","O(m)","N/A","No","N/A","Precomputes LPS table to avoid re-checking characters."},
+            {"Rabin-Karp","Search","String","O(n)","O(n+m)","O(nm)","O(1)","N/A","No","N/A","Rolling hash. Worst case O(nm) on collisions. Good for multi-pattern."},
+        };
+    }
+
+    private String[][] buildCompatNotesData() {
+        return new String[][] {
+            {"Bubble Sort","Linear Search","★★★","Both work on unsorted data. Consistent for small datasets."},
+            {"Bubble Sort","Binary Search","★☆☆","O(n²) sort cost dwarfs Binary Search gain except on tiny arrays."},
+            {"Bubble Sort","Ternary Search","★☆☆","Sort cost too high to justify Ternary's marginal benefit over Binary."},
+            {"Bubble Sort","Jump Search","★☆☆","Technically works but O(n²) sort cost makes this impractical."},
+            {"Bubble Sort","Interpolation Search","★☆☆","Sort cost dominates at any meaningful scale."},
+            {"Bubble Sort","Exponential Search","★☆☆","Exponential Search shines on large arrays. Bubble Sort does not."},
+            {"Bubble Sort","Fibonacci Search","★☆☆","Pairing a niche search with the slowest sort undermines both."},
+            {"Insertion Sort","Linear Search","★★★","Both fast on small n. Ideal for embedded or educational use."},
+            {"Insertion Sort","Binary Search","★★☆","Keep sorted on insert, then Binary Search for lookups."},
+            {"Insertion Sort","Jump Search","★★☆","Solid pairing for small-to-medium sorted arrays."},
+            {"Insertion Sort","Interpolation Search","★★☆","Good if data is numerically well-spread."},
+            {"Insertion Sort","Exponential Search","★☆☆","Exponential targets large arrays. Insertion is slow on large n."},
+            {"Selection Sort","Linear Search","★★☆","Selection minimises swaps — useful when writes are expensive."},
+            {"Selection Sort","Exponential Search","✗","Exponential is for large arrays. Selection Sort is O(n²). At odds."},
+            {"Gnome Sort","Interpolation Search","✗","Gnome Sort too slow to pair with a search requiring efficient prep."},
+            {"Gnome Sort","Exponential Search","✗","Scale mismatch. Gnome is educational. Exponential is production."},
+            {"Gnome Sort","Fibonacci Search","✗","Both are niche — but for completely different reasons. No synergy."},
+            {"Merge Sort","Linear Search","★★☆","Merge Sort is overkill if only Linear searching, but fine."},
+            {"Merge Sort","Binary Search","★★★","Classic pairing. Stable, reliable, O(n log n) + O(log n)."},
+            {"Merge Sort","Jump Search","★★★","Practical, well-balanced combination for medium datasets."},
+            {"Merge Sort","Interpolation Search","★★★","Merge preserves distribution. Interpolation exploits it."},
+            {"Merge Sort","Exponential Search","★★★","Both handle large datasets well. Strong match."},
+            {"Quick Sort","Binary Search","★★★","Most common real-world pairing. The industry standard."},
+            {"Quick Sort","Jump Search","★★★","Great for medium arrays. Fast, in-place sort + simple search."},
+            {"Quick Sort","Interpolation Search","★★★","Strong for numeric data. Interpolation capitalises on sorted output."},
+            {"Quick Sort","Exponential Search","★★★","Both designed for large-scale use. Excellent production pairing."},
+            {"Heap Sort","Binary Search","★★★","Guaranteed O(n log n) + O(log n). No worst-case surprises."},
+            {"Heap Sort","Exponential Search","★★★","Both work well at scale with guaranteed bounds."},
+            {"Tim Sort","Binary Search","★★★","Literally what Java's Collections.binarySearch + Arrays.sort does."},
+            {"Tim Sort","Jump Search","★★★","Tim Sort handles real data well. Jump Search is efficient and practical."},
+            {"Tim Sort","Interpolation Search","★★★","Real-world data tends toward uniform distribution. Strong match."},
+            {"Tim Sort","Exponential Search","★★★","Both production-grade. Strong combination for large datasets."},
+            {"Bogo Sort","Linear Search","★★☆","At least Linear Search is fast — partially compensates for Bogo's absurdity."},
+            {"Bogo Sort","Binary Search","✗","Waiting O((n+1)!) to sort for O(log n) search is an insult to CS."},
+            {"Bogo Sort","Ternary Search","✗","Bogo Sort invalidates any efficiency argument Ternary could make."},
+            {"Bogo Sort","Jump Search","✗","Sort cost makes Jump Search's O(√n) completely irrelevant."},
+            {"Bogo Sort","Interpolation Search","✗","You'd spend a geological epoch sorting before search begins."},
+            {"Bogo Sort","Exponential Search","✗","Exponential is for large arrays. Bogo on large arrays is impossible."},
+            {"Bogo Sort","Fibonacci Search","✗","No. Just no."},
+            {"Radix Sort","Binary Search","★★★","Radix O(nk) + Binary O(log n). Extremely fast for large integers."},
+            {"Radix Sort","Jump Search","★★★","Great combo for large integer arrays. Both fast and practical."},
+            {"Radix Sort","Interpolation Search","★★★","Outstanding. Radix produces perfectly ordered integers — ideal for Interpolation."},
+            {"Radix Sort","Exponential Search","★★★","Both designed for large-scale integer data. One of the best pairings."},
+        };
+    }
+
+    private String[][] buildUseCaseData() {
+        return new String[][] {
+            {"Small dataset (n < 20), any order","Insertion Sort + Linear Search","Both O(n) or better on small n. Simple, zero overhead. Ideal for embedded or educational use."},
+            {"Large dataset, many repeated searches","Quick Sort + Binary Search","Sort once O(n log n), search many times at O(log n). Amortised cost per search is effectively O(log n). Industry standard."},
+            {"Large dataset, guaranteed worst-case","Merge Sort + Binary Search","Merge Sort has no O(n²) worst case. Stable and predictable. Ideal for safety-critical systems."},
+            {"Large integer dataset, maximum speed","Radix Sort + Binary Search","Radix is O(nk) — faster than O(n log n) for fixed-width integers. Best raw throughput."},
+            {"Uniformly distributed numeric data","Radix Sort + Interpolation Search","Radix produces perfectly ordered integers. Interpolation achieves O(log log n). Best theoretical pairing."},
+            {"Data arrives in nearly-sorted order","Insertion Sort + Binary Search","Insertion Sort is O(n) on nearly-sorted data. Keep array sorted on insert, search with Binary."},
+            {"Java / Python production code","Tim Sort + Binary Search","Tim Sort is Java's Arrays.sort and Python's sorted(). Java's Collections.binarySearch pairs natively."},
+            {"Memory-constrained environment","Heap Sort + Fibonacci Search","Heap Sort is O(1) space. Fibonacci avoids division — useful on microcontrollers."},
+            {"Unknown or unbounded array size","Quick Sort + Exponential Search","Exponential finds the range by doubling — ideal when bounds are unknown."},
+            {"Graph pathfinding, shortest path","BFS (no sort needed)","BFS guarantees shortest path in unweighted graphs. Sorting is irrelevant to graph structure."},
+            {"Graph exploration, cycle detection","DFS (no sort needed)","DFS is the foundation of cycle detection and topological sort."},
+            {"String pattern matching, single pattern","KMP Search (no sort needed)","KMP finds all occurrences in O(n+m). Best single-pattern string search."},
+            {"String matching, multiple patterns","Rabin-Karp (no sort needed)","Rolling hash extends naturally to multi-pattern search."},
+            {"One-time search, no sort budget","Linear Search (no sort needed)","If searching once on unsorted data, sort cost exceeds a single O(n) scan."},
+            {"Educational / visualisation purposes","Bubble Sort + Linear Search","Both are the simplest in their category. Easy to animate and understand."},
+            {"Avoid at all costs","Bogo Sort + anything","Expected O((n+1)!) sort time. Pairing with any search is computational self-harm."},
+        };
+    }
+
+    private void runAlgorithm() {
+    if (state.running) {
+        return;
+    }
+
+    boolean ready = true;
+    if (state.isArrayAlgo()) {
+        ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+    } else if (state.isSortAlgo()) {
+        ready = parseSortInput(sortArrayField.getText(), true);
+    }
+    if (!ready) {
+        return;
+    }
+
+    state.running = true;
+    runBtn.setEnabled(false);
+    resetBtn.setText("stop");       // <-- rename to stop
+    state.resetStats();
+
+    algoThread = new Thread(() -> {         // <-- store the thread
+        try {
+            if (state.isArrayAlgo()) {
+                runner.runArrayAlgo();
+            } else if (state.isGraphAlgo()) {
+                runner.runGraphAlgo();
+            } else if (state.isSortAlgo()) {
+                runner.runSortAlgo();
+            } else {
+                runner.runStringAlgo();
+            }
+            updateStats();
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+            SwingUtilities.invokeLater(() -> {   // <-- clean up on stop
+                state.running = false;
+                forceResetVisuals();
+            });
+        } catch (Exception ex) {
+            String message = ex.getMessage() == null ? "Unable to run the selected algorithm." : ex.getMessage();
+            SwingUtilities.invokeLater(() -> statusLabel.setText(message));
+            updateStats();
+        } finally {
+            state.running = false;
+            SwingUtilities.invokeLater(() -> {
+                runBtn.setEnabled(true);
+                resetBtn.setText("reset");  // <-- restore label
+            });
+        }
+    });
+    algoThread.start();
+}
+
     private void forceResetVisuals() {
+        
         state.resetStats();
         state.resetCaption();
         if (state.isArrayAlgo()) {
@@ -924,7 +1135,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         } else {
             state.resetGraphState();
         }
-        if (statusLabel != null) statusLabel.setText("Ready - press Run");
+        if (statusLabel != null) statusLabel.setText("stopped - press run");
         if (cmpLabel != null) cmpLabel.setText("comparisons: -");
         if (swapsLabel != null) swapsLabel.setText("swaps: -");
         if (timeLabel != null) timeLabel.setText("time: -");
@@ -1307,8 +1518,6 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
-                g2.setColor(BORDER);
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
             }
         };
         panel.setOpaque(false);
@@ -1326,27 +1535,6 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JLabel label = new JLabel(text);
         label.setFont(MONO);
         label.setForeground(TEXT_DIM);
-        return label;
-    }
-
-    private JLabel metricLabel(String text) {
-        JLabel label = new JLabel(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(CARD);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(BORDER);
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-                g2.dispose();
-                super.paintComponent(g);
-            }
-        };
-        label.setFont(MONO);
-        label.setForeground(TEXT_DIM);
-        label.setOpaque(false);
-        label.setBorder(new EmptyBorder(6, 10, 6, 10));
         return label;
     }
 
@@ -1391,20 +1579,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JButton button = new JButton(label) {
             @Override
             protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
+                Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                boolean hovered = Boolean.TRUE.equals(getClientProperty("hovered"));
-                Color fill = primary ? (hovered ? ACCENT.brighter() : ACCENT) : (hovered ? ALGO_HOVER_BG : CARD);
-                Color stroke = primary ? ACCENT : (hovered ? ACCENT : BORDER);
-                if (!isEnabled()) {
-                    fill = PANEL;
-                    stroke = BORDER;
-                }
-                g2.setColor(fill);
+                g2.setColor(primary ? ACCENT : CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(stroke);
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
-                g2.dispose();
                 super.paintComponent(g);
             }
         };
@@ -1415,23 +1593,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         button.setBorderPainted(false);
         button.setFocusPainted(false);
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.putClientProperty("hovered", false);
-        button.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                button.putClientProperty("hovered", true);
-                button.setForeground(primary ? Color.WHITE : TEXT);
-                button.repaint();
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                button.putClientProperty("hovered", false);
-                button.setForeground(primary ? Color.WHITE : TEXT_DIM);
-                button.repaint();
-            }
-        });
-        int width = Math.max(82, Math.min(132, label.length() * 9 + 34));
+        int width = label.length() >= 10 ? 120 : label.length() >= 6 ? 100 : 80;
         button.setPreferredSize(new Dimension(width, 34));
         return button;
     }
@@ -1455,8 +1617,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             setFocusPainted(false);
             setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setMaximumSize(new Dimension(224, 32));
-            setPreferredSize(new Dimension(224, 32));
+            setMaximumSize(new Dimension(232, 32));
+            setPreferredSize(new Dimension(232, 32));
             setBorder(new EmptyBorder(0, rightAligned ? 10 : 18, 0, rightAligned ? 18 : 10));
             addMouseListener(new MouseAdapter() {
                 @Override
