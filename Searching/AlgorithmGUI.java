@@ -879,27 +879,50 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildTablePanel(String[][] columns, String[][] data) {
+        final Color tableBg = darkMode ? new Color(17, 19, 24) : new Color(250, 251, 255);
+        final Color tableAltBg = darkMode ? new Color(20, 23, 30) : new Color(239, 242, 249);
+        final Color tableHeaderBg = darkMode ? new Color(26, 31, 46) : PANEL;
+        final Color tableSelectionBg = darkMode ? new Color(28, 38, 70) : ALGO_ACTIVE_BG;
+
         javax.swing.JTable table = new javax.swing.JTable(
             new javax.swing.table.DefaultTableModel(data,
                 java.util.Arrays.stream(columns).map(c -> c[0]).toArray()) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         });
-        table.setBackground(new Color(17, 19, 24));
+        table.setBackground(tableBg);
         table.setForeground(TEXT);
         table.setFont(SANS);
         table.setRowHeight(26);
         table.setGridColor(BORDER);
-        table.getTableHeader().setBackground(new Color(26, 31, 46));
+        table.setSelectionBackground(tableSelectionBg);
+        table.setSelectionForeground(TEXT);
+        table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(javax.swing.JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component cell = super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, column
+                );
+                if (!isSelected) {
+                    cell.setBackground(row % 2 == 0 ? tableBg : tableAltBg);
+                    cell.setForeground(TEXT);
+                }
+                if (cell instanceof JComponent) {
+                    ((JComponent) cell).setBorder(new EmptyBorder(0, 8, 0, 8));
+                }
+                return cell;
+            }
+        });
+        table.getTableHeader().setBackground(tableHeaderBg);
         table.getTableHeader().setForeground(TEXT);
         table.getTableHeader().setFont(SANS_B);
-        table.setSelectionBackground(new Color(28, 38, 70));
-        table.setSelectionForeground(TEXT);
+        table.getTableHeader().setOpaque(true);
         for (int i = 0; i < columns.length; i++) {
             table.getColumnModel().getColumn(i)
                  .setPreferredWidth(Integer.parseInt(columns[i][1]));
         }
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(17, 19, 24));
+        panel.setBackground(tableBg);
         panel.add(table.getTableHeader(), BorderLayout.NORTH);
         panel.add(table, BorderLayout.CENTER);
         return panel;
@@ -927,17 +950,20 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         int cols = searches.length, rows = sorts.length;
         int totalW = ROW_HDR + cols * CELL;
         int totalH = HDR_H + rows * ROW_H;
+        Color matrixBg = darkMode ? new Color(17, 19, 24) : new Color(250, 251, 255);
+        Color matrixHeaderBg = darkMode ? new Color(26, 31, 46) : PANEL;
+        Color matrixBorder = darkMode ? new Color(42, 47, 61) : BORDER;
 
         JPanel panel = new JPanel(null);
-        panel.setBackground(new Color(17, 19, 24));
+        panel.setBackground(matrixBg);
         panel.setPreferredSize(new Dimension(totalW, totalH));
 
         for (int c = 0; c < cols; c++) {
             JLabel lbl = new JLabel(searches[c], SwingConstants.CENTER);
             lbl.setFont(SMALL);
-            lbl.setForeground(new Color(52, 211, 153));
+            lbl.setForeground(ACCENT2);
             lbl.setOpaque(true);
-            lbl.setBackground(new Color(26, 31, 46));
+            lbl.setBackground(matrixHeaderBg);
             lbl.setBounds(ROW_HDR + c * CELL, 0, CELL, HDR_H);
             panel.add(lbl);
         }
@@ -945,9 +971,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         for (int r = 0; r < rows; r++) {
             JLabel rh = new JLabel("  " + sorts[r]);
             rh.setFont(SMALL);
-            rh.setForeground(new Color(82, 130, 255));
+            rh.setForeground(ACCENT);
             rh.setOpaque(true);
-            rh.setBackground(new Color(26, 31, 46));
+            rh.setBackground(matrixHeaderBg);
             rh.setBounds(0, HDR_H + r * ROW_H, ROW_HDR, ROW_H);
             panel.add(rh);
 
@@ -961,17 +987,65 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                     case "✗"   -> { bg = new Color(42, 16, 16);  fg = new Color(248, 113, 113); }
                     default    -> { bg = new Color(17, 19, 24);  fg = new Color(42, 47, 61); }
                 }
+                if (!darkMode) {
+                    bg = lightMatrixRatingBackground(rating);
+                    fg = lightMatrixRatingForeground(rating);
+                }
                 JLabel cell = new JLabel(rating, SwingConstants.CENTER);
                 cell.setFont(SANS_B);
                 cell.setForeground(fg);
                 cell.setOpaque(true);
                 cell.setBackground(bg);
-                cell.setBorder(BorderFactory.createLineBorder(new Color(42, 47, 61), 1));
+                cell.setBorder(BorderFactory.createLineBorder(matrixBorder, 1));
                 cell.setBounds(ROW_HDR + c * CELL, HDR_H + r * ROW_H, CELL, ROW_H);
                 panel.add(cell);
             }
         }
         return panel;
+    }
+
+    private Color lightMatrixRatingBackground(String rating) {
+        if (rating.contains("\u2717")) {
+            return new Color(255, 232, 235);
+        }
+        int stars = countOccurrences(rating, '\u2605');
+        if (stars >= 3) {
+            return new Color(225, 247, 238);
+        }
+        if (stars == 2) {
+            return new Color(228, 237, 255);
+        }
+        if (stars == 1) {
+            return new Color(255, 240, 222);
+        }
+        return new Color(239, 242, 249);
+    }
+
+    private Color lightMatrixRatingForeground(String rating) {
+        if (rating.contains("\u2717")) {
+            return new Color(185, 28, 28);
+        }
+        int stars = countOccurrences(rating, '\u2605');
+        if (stars >= 3) {
+            return new Color(12, 116, 70);
+        }
+        if (stars == 2) {
+            return new Color(38, 88, 190);
+        }
+        if (stars == 1) {
+            return new Color(180, 83, 9);
+        }
+        return TEXT_DIM;
+    }
+
+    private int countOccurrences(String text, char needle) {
+        int count = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == needle) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private String[][] buildComparisonData() {
@@ -1464,8 +1538,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         JPanel badges = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         badges.setOpaque(false);
-        badges.add(badge("T: " + row[1], ACCENT, new Color(14, 22, 44)));
-        badges.add(badge("S: " + row[2], ACCENT2, new Color(10, 30, 22)));
+        badges.add(badge("T: " + row[1], ACCENT,
+            darkMode ? new Color(14, 22, 44) : new Color(226, 235, 255)));
+        badges.add(badge("S: " + row[2], ACCENT2,
+            darkMode ? new Color(10, 30, 22) : new Color(222, 245, 234)));
 
         top.add(name, BorderLayout.WEST);
         top.add(badges, BorderLayout.EAST);
@@ -1478,18 +1554,23 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         body.add(Box.createVerticalStrut(4));
         body.add(htmlLabel(row[4], TEXT_DIM));
         body.add(Box.createVerticalStrut(4));
-        body.add(htmlLabel("<i>" + row[5] + "</i>", new Color(90, 100, 120)));
+        body.add(htmlLabel("<i>" + row[5] + "</i>", TEXT_DIM));
         card.add(body, BorderLayout.CENTER);
 
         return card;
     }
 
     private JLabel htmlLabel(String text, Color color) {
-        JLabel label = new JLabel("<html><body style='width:360px'>" + text + "</body></html>");
+        JLabel label = new JLabel("<html><body style='width:360px;color:" + colorToHex(color) + "'>"
+            + text + "</body></html>");
         label.setFont(SMALL);
         label.setForeground(color);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         return label;
+    }
+
+    private String colorToHex(Color color) {
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
     private JLabel badge(String text, Color fg, Color bg) {
