@@ -42,34 +42,34 @@ class PracticeDialog extends JDialog {
 
     // ── Dark palette ──────────────────────────────────────────────────────────
     private static final Color[] DARK = {
-        new Color(10,  11,  14),   // 0  BG
-        new Color(17,  19,  24),   // 1  PANEL
-        new Color(24,  27,  34),   // 2  CARD
-        new Color(38,  42,  54),   // 3  BORDER
-        new Color(82,  130, 255),  // 4  ACCENT
+        new Color(8,   13,  26),   // 0  BG
+        new Color(13,  20,  35),   // 1  PANEL
+        new Color(20,  30,  48),   // 2  CARD
+        new Color(42,  54,  74),   // 3  BORDER
+        new Color(96,  165, 250),  // 4  ACCENT
         new Color(52,  211, 153),  // 5  ACCENT2
         new Color(251, 191, 36),   // 6  WARN
         new Color(239, 68,  68),   // 7  DANGER
-        new Color(220, 225, 235),  // 8  TEXT
-        new Color(100, 110, 130),  // 9  TEXT_DIM
-        new Color(55,  62,  78),   // 10 TEXT_HINT
-        new Color(14,  16,  21),   // 11 SURFACE
+        new Color(241, 245, 249),  // 8  TEXT
+        new Color(180, 190, 205),  // 9  TEXT_DIM
+        new Color(105, 118, 139),  // 10 TEXT_HINT
+        new Color(12,  18,  32),   // 11 SURFACE
     };
 
     // ── Light palette ─────────────────────────────────────────────────────────
     private static final Color[] LIGHT = {
-        new Color(245, 246, 250),  // 0  BG
-        new Color(230, 232, 240),  // 1  PANEL
-        new Color(215, 218, 230),  // 2  CARD
-        new Color(180, 185, 205),  // 3  BORDER
-        new Color(50,  100, 220),  // 4  ACCENT
-        new Color(15,  160, 100),  // 5  ACCENT2
+        new Color(248, 250, 252),  // 0  BG
+        new Color(255, 255, 255),  // 1  PANEL
+        new Color(255, 255, 255),  // 2  CARD
+        new Color(211, 219, 232),  // 3  BORDER
+        new Color(37,  99,  235),  // 4  ACCENT
+        new Color(5,   150, 105),  // 5  ACCENT2
         new Color(200, 140, 10),   // 6  WARN
         new Color(200, 50,  50),   // 7  DANGER
         new Color(15,  18,  35),   // 8  TEXT
-        new Color(80,  88,  110),  // 9  TEXT_DIM
-        new Color(160, 168, 190),  // 10 TEXT_HINT
-        new Color(235, 237, 245),  // 11 SURFACE
+        new Color(71,  85,  105),  // 9  TEXT_DIM
+        new Color(148, 163, 184),  // 10 TEXT_HINT
+        new Color(248, 250, 252),  // 11 SURFACE
     };
 
     // ── Live color references — swapped by applyTheme() ───────────────────────

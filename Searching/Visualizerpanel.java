@@ -22,25 +22,25 @@ class VisualizerPanel extends JPanel {
 
     // ── Dark palette ──────────────────────────────────────────────────────────
     private static final Color[] DARK = {
-        new Color(10,  11,  14),   // 0  BG
-        new Color(24,  27,  34),   // 1  CARD
-        new Color(38,  42,  54),   // 2  BORDER
-        new Color(82,  130, 255),  // 3  ACCENT
+        new Color(8,   13,  26),   // 0  BG
+        new Color(20,  30,  48),   // 1  CARD
+        new Color(42,  54,  74),   // 2  BORDER
+        new Color(96,  165, 250),  // 3  ACCENT
         new Color(52,  211, 153),  // 4  ACCENT2
         new Color(251, 191, 36),   // 5  WARN
         new Color(239, 68,  68),   // 6  DANGER
-        new Color(220, 225, 235),  // 7  TEXT
-        new Color(100, 110, 130),  // 8  TEXT_DIM
-        new Color(55,  62,  78),   // 9  TEXT_HINT
-        new Color(30,  34,  44),   // 10 CELL_DEF
-        new Color(22,  35,  55),   // 11 CELL_SCAN
-        new Color(65,  48,  12),   // 12 CELL_CHECK
-        new Color(12,  54,  36),   // 13 CELL_FOUND
-        new Color(14,  18,  28),   // 14 CAPTION_BG
-        new Color(18,  42,  78),   // 15 CELL_PIVOT
-        new Color(16,  60,  42),   // 16 CELL_SWAP
-        new Color(22,  36,  68),   // 17 CELL_MERGE
-        new Color(28,  34,  50),   // 18 CELL_ACTIVE
+        new Color(241, 245, 249),  // 7  TEXT
+        new Color(180, 190, 205),  // 8  TEXT_DIM
+        new Color(105, 118, 139),  // 9  TEXT_HINT
+        new Color(26,  38,  58),   // 10 CELL_DEF
+        new Color(24,  46,  76),   // 11 CELL_SCAN
+        new Color(70,  52,  14),   // 12 CELL_CHECK
+        new Color(13,  61,  43),   // 13 CELL_FOUND
+        new Color(13,  20,  35),   // 14 CAPTION_BG
+        new Color(22,  54,  98),   // 15 CELL_PIVOT
+        new Color(17,  67,  49),   // 16 CELL_SWAP
+        new Color(28,  55,  98),   // 17 CELL_MERGE
+        new Color(32,  44,  66),   // 18 CELL_ACTIVE
         new Color(22,  68,  50),   // 19 GRAPH_PATH_FILL
         new Color(55,  40,  8),    // 20 GRAPH_CURRENT_FILL
         new Color(18,  28,  52),   // 21 GRAPH_VISITED_FILL
@@ -55,25 +55,25 @@ class VisualizerPanel extends JPanel {
 
     // ── Light palette ─────────────────────────────────────────────────────────
     private static final Color[] LIGHT = {
-        new Color(245, 246, 250),  // 0  BG
-        new Color(215, 218, 230),  // 1  CARD
-        new Color(180, 185, 205),  // 2  BORDER
-        new Color(50,  100, 220),  // 3  ACCENT
-        new Color(15,  160, 100),  // 4  ACCENT2
+        new Color(248, 250, 252),  // 0  BG
+        new Color(255, 255, 255),  // 1  CARD
+        new Color(211, 219, 232),  // 2  BORDER
+        new Color(37,  99,  235),  // 3  ACCENT
+        new Color(5,   150, 105),  // 4  ACCENT2
         new Color(200, 140, 10),   // 5  WARN
         new Color(200, 50,  50),   // 6  DANGER
         new Color(15,  18,  35),   // 7  TEXT
-        new Color(80,  88,  110),  // 8  TEXT_DIM
-        new Color(160, 168, 190),  // 9  TEXT_HINT
-        new Color(210, 213, 225),  // 10 CELL_DEF
-        new Color(200, 215, 240),  // 11 CELL_SCAN
+        new Color(71,  85,  105),  // 8  TEXT_DIM
+        new Color(148, 163, 184),  // 9  TEXT_HINT
+        new Color(241, 245, 249),  // 10 CELL_DEF
+        new Color(219, 234, 254),  // 11 CELL_SCAN
         new Color(245, 225, 180),  // 12 CELL_CHECK
         new Color(195, 240, 215),  // 13 CELL_FOUND
-        new Color(240, 242, 250),  // 14 CAPTION_BG
+        new Color(255, 255, 255),  // 14 CAPTION_BG
         new Color(210, 225, 255),  // 15 CELL_PIVOT
         new Color(205, 245, 225),  // 16 CELL_SWAP
-        new Color(215, 225, 250),  // 17 CELL_MERGE
-        new Color(220, 224, 240),  // 18 CELL_ACTIVE
+        new Color(219, 234, 254),  // 17 CELL_MERGE
+        new Color(226, 232, 240),  // 18 CELL_ACTIVE
         new Color(195, 240, 215),  // 19 GRAPH_PATH_FILL
         new Color(250, 235, 195),  // 20 GRAPH_CURRENT_FILL
         new Color(210, 220, 248),  // 21 GRAPH_VISITED_FILL
