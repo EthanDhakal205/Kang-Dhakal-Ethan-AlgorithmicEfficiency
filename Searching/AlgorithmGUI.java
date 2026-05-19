@@ -479,6 +479,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JButton codeBtn = actionButton("code", false);
         codeBtn.addActionListener(e -> showCodeDialog());
 
+        JButton aiBtn = actionButton("ai chat", false);
+        aiBtn.addActionListener(e -> openAiChatDialog());
+
         JButton appsBtn = actionButton("applications", false);
         appsBtn.addActionListener(e -> showAppsMenu(appsBtn));
 
@@ -500,6 +503,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         right.add(captionToggle);
         right.add(codeBtn);
+        right.add(aiBtn);
         right.add(appsBtn);
         right.add(practiceBtn);
         right.add(speedLabel);
@@ -1546,6 +1550,11 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         }
         practiceDialog.applyTheme(darkMode);
         practiceDialog.showForAlgorithm(state.selectedAlgo);
+    }
+
+    private void openAiChatDialog() {
+        AiChatDialog dialog = new AiChatDialog(this, darkMode, state.selectedAlgo);
+        dialog.setVisible(true);
     }
 
     private JPanel buildAppCard(String[] row) {
