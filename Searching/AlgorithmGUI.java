@@ -1151,6 +1151,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     boolean ready = true;
     if (state.isArrayAlgo()) {
         ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+        if (ready && isSortRequired() && !isSortedAscending(state.currentArray)) {
+            promptSortAndApply();
+            return;
+        }
     } else if (state.isSortAlgo()) {
         ready = parseSortInput(sortArrayField.getText(), true);
     }
