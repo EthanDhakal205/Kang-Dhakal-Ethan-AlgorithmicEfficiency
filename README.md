@@ -1,7 +1,5 @@
-<<<<<<< HEAD
 Install OpenJDK 25 from adoptium.net
 =======
-Install OpenJDK 25 from adoptium.net.
 
 ## Run the visualizer
 
@@ -34,4 +32,3 @@ http://localhost:11434/api/chat
 ```
 
 You can change the model in the chat window after pulling another Ollama model.
->>>>>>> Dhakal
