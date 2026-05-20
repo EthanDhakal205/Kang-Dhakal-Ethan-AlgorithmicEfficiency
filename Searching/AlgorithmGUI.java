@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -1184,6 +1183,10 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     boolean ready = true;
     if (state.isArrayAlgo()) {
         ready = parseArrayInput(arrayField.getText(), targetField.getText(), arrayIgnoreCaseBox.isSelected(), true);
+        if (ready && isSortRequired() && !isSortedAscending(state.currentArray)) {
+            promptSortAndApply();
+            return;
+        }
     } else if (state.isSortAlgo()) {
         ready = parseSortInput(sortArrayField.getText(), true);
     }
