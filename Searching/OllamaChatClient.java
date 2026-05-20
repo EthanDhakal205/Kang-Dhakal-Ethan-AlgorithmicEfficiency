@@ -16,6 +16,7 @@ class OllamaChatClient {
 
     private final HttpClient httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(8))
+        .followRedirects(HttpClient.Redirect.NORMAL)
         .build();
 
     static class Message {

@@ -20,6 +20,7 @@ class OllamaSetupService {
 
     private final HttpClient httpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(15))
+        .followRedirects(HttpClient.Redirect.NORMAL)
         .build();
 
     boolean isWindows() {
