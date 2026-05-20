@@ -27,6 +27,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -41,37 +42,38 @@ import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicScrollBarUI;
 
 public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     // Dark palette
     private static final Color[] DARK = {
-        new Color(10, 11, 14),    // BG
-        new Color(17, 19, 24),    // PANEL
-        new Color(24, 27, 34),    // CARD
-        new Color(38, 42, 54),    // BORDER
-        new Color(82, 130, 255),  // ACCENT
-        new Color(52, 211, 153),  // ACCENT2
-        new Color(220, 225, 235), // TEXT
-        new Color(100, 110, 130), // TEXT_DIM
-        new Color(55, 62, 78),     // TEXT_HINT
-        new Color(28, 38, 70),   // ALGO_ACTIVE_BG
-        new Color(24, 27, 38),   // ALGO_HOVER_BG
+        new Color(8, 13, 26),      // BG
+        new Color(13, 20, 35),     // PANEL
+        new Color(20, 30, 48),     // CARD
+        new Color(42, 54, 74),     // BORDER
+        new Color(96, 165, 250),   // ACCENT
+        new Color(52, 211, 153),   // ACCENT2
+        new Color(241, 245, 249),  // TEXT
+        new Color(180, 190, 205),  // TEXT_DIM
+        new Color(105, 118, 139),  // TEXT_HINT
+        new Color(28, 55, 99),     // ALGO_ACTIVE_BG
+        new Color(28, 39, 59),     // ALGO_HOVER_BG
     };
 
     // Light palette
     private static final Color[] LIGHT = {
-        new Color(245, 246, 250), // BG
-        new Color(230, 232, 240), // PANEL
-        new Color(215, 218, 230), // CARD
-        new Color(180, 185, 205), // BORDER
-        new Color(50, 100, 220),  // ACCENT
-        new Color(15, 160, 100),  // ACCENT2
-        new Color(15, 18, 35),    // TEXT
-        new Color(80, 88, 110),   // TEXT_DIM
-        new Color(160, 168, 190),  // TEXT_HINT
-        new Color(210, 220, 248), // ALGO_ACTIVE_BG
-        new Color(225, 228, 240), // ALGO_HOVER_BG
+        new Color(248, 250, 252), // BG
+        new Color(255, 255, 255), // PANEL
+        new Color(255, 255, 255), // CARD
+        new Color(211, 219, 232), // BORDER
+        new Color(37, 99, 235),   // ACCENT
+        new Color(5, 150, 105),   // ACCENT2
+        new Color(15, 23, 42),    // TEXT
+        new Color(71, 85, 105),   // TEXT_DIM
+        new Color(148, 163, 184), // TEXT_HINT
+        new Color(219, 234, 254), // ALGO_ACTIVE_BG
+        new Color(241, 245, 249), // ALGO_HOVER_BG
     };
 
     // Live color references — swapped by applyTheme()
@@ -97,6 +99,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private JLabel timeLabel;
     private JLabel resultLabel;
     private JLabel algoLabel;
+    private JLabel algoMetaLabel;
     private JSlider speedSlider;
     private JButton runBtn;
     private JButton resetBtn;
@@ -163,7 +166,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         revalidate();
         repaint();
         refreshInputPanel();
-        themeBtn.setText(darkMode ? "☀ light" : "🌙 dark");
+        themeBtn.setText(darkMode ? "light" : "dark");
     }
 
     private void startAnimLoop() {
@@ -327,7 +330,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildSearchSidebar() {
-        JPanel side = buildRailPanel("searchviz", ACCENT, false);
+        JPanel side = buildRailPanel("Search", ACCENT, false);
         JPanel list = buildRailList();
         addCategory(list, "SEARCH / ARRAY", AnimState.ARRAY_SEARCH_ALGOS, ACCENT, false);
         addCategory(list, "SEARCH / GRAPH", AnimState.GRAPH_ALGOS, ACCENT, false);
@@ -337,7 +340,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     }
 
     private JPanel buildSortSidebar() {
-        JPanel side = buildRailPanel("sortviz", ACCENT2, true);
+        JPanel side = buildRailPanel("Sort", ACCENT2, true);
         side.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, BORDER));
         JPanel list = buildRailList();
         addCategory(list, "COMPARISON SORTS", AnimState.COMPARISON_SORT_ALGOS, ACCENT2, true);
@@ -372,9 +375,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     private JScrollPane buildRailScroll(JPanel list) {
         JScrollPane scroll = new JScrollPane(list);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(PANEL);
         scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        styleScrollPane(scroll, PANEL);
         return scroll;
     }
 
@@ -401,7 +403,25 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
     private void selectAlgorithm(String algo) {
         state.selectedAlgo = algo;
         algoLabel.setText(algo);
+        if (algoMetaLabel != null) {
+            algoMetaLabel.setText(selectedAlgorithmMeta());
+        }
         refreshInputPanel();
+    }
+
+    private String selectedAlgorithmMeta() {
+        String family;
+        if (state.isSortAlgo()) {
+            family = "sorting";
+        } else if (state.isGraphAlgo()) {
+            family = "graph search";
+        } else if (state.isStringAlgo()) {
+            family = "string search";
+        } else {
+            family = "array search";
+        }
+        return family + " | time " + AppData.getTimeComplexity(state.selectedAlgo)
+            + " | space " + AppData.getSpaceComplexity(state.selectedAlgo);
     }
 
     private JPanel buildMain() {
@@ -422,19 +442,30 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         ));
 
         algoLabel = new JLabel(state.selectedAlgo);
-        algoLabel.setFont(SANS_B);
+        algoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         algoLabel.setForeground(TEXT);
 
-        themeBtn = actionButton(darkMode ? "☀ light" : "🌙 dark", false);
+        algoMetaLabel = new JLabel(selectedAlgorithmMeta());
+        algoMetaLabel.setFont(SMALL);
+        algoMetaLabel.setForeground(TEXT_DIM);
+
+        JPanel titleStack = new JPanel();
+        titleStack.setOpaque(false);
+        titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
+        titleStack.add(algoLabel);
+        titleStack.add(Box.createVerticalStrut(2));
+        titleStack.add(algoMetaLabel);
+
+        themeBtn = actionButton(darkMode ? "light" : "dark", false);
         themeBtn.addActionListener(e -> {
             darkMode = !darkMode;
             rebuildUI();
         });
 
-        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         westPanel.setOpaque(false);
         westPanel.add(themeBtn);
-        westPanel.add(algoLabel);
+        westPanel.add(titleStack);
         bar.add(westPanel, BorderLayout.WEST);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
@@ -447,6 +478,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JButton codeBtn = actionButton("code", false);
         codeBtn.addActionListener(e -> showCodeDialog());
 
+        JButton aiBtn = actionButton("ai chat", false);
+        aiBtn.addActionListener(e -> openAiChatDialog());
+
         JButton appsBtn = actionButton("applications", false);
         appsBtn.addActionListener(e -> showAppsMenu(appsBtn));
 
@@ -458,7 +492,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         speedLabel.setForeground(TEXT_DIM);
 
         speedSlider = new JSlider(1, 5, 3);
-        speedSlider.setBackground(PANEL);
+        speedSlider.setOpaque(false);
+        speedSlider.setForeground(ACCENT);
         speedSlider.setPreferredSize(new Dimension(100, 24));
         speedSlider.addChangeListener(e -> {
             int[] delays = {700, 450, 280, 130, 50};
@@ -467,6 +502,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
         right.add(captionToggle);
         right.add(codeBtn);
+        right.add(aiBtn);
         right.add(appsBtn);
         right.add(practiceBtn);
         right.add(speedLabel);
@@ -493,8 +529,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         vizScroll.setBorder(null);
         vizScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         vizScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-        vizScroll.getViewport().setBackground(BG);
-        vizScroll.getVerticalScrollBar().setUnitIncrement(20);
+        styleScrollPane(vizScroll, BG);
         viz.setScrollParent(vizScroll);
         center.add(vizScroll, BorderLayout.CENTER);
         return center;
@@ -643,18 +678,18 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             new EmptyBorder(12, 24, 12, 24)
         ));
 
-        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 24, 0));
+        JPanel stats = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         stats.setOpaque(false);
         cmpLabel = monoLabel("comparisons: -");
         swapsLabel = monoLabel("swaps: -");
         timeLabel = monoLabel("time: -");
         resultLabel = monoLabel("result: -");
         statusLabel = monoLabel("configure and press run");
-        stats.add(cmpLabel);
-        stats.add(swapsLabel);
-        stats.add(timeLabel);
-        stats.add(resultLabel);
-        stats.add(statusLabel);
+        stats.add(metricChip(cmpLabel));
+        stats.add(metricChip(swapsLabel));
+        stats.add(metricChip(timeLabel));
+        stats.add(metricChip(resultLabel));
+        stats.add(metricChip(statusLabel));
         bar.add(stats, BorderLayout.WEST);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
@@ -868,10 +903,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         }
 
         JScrollPane scroll = new JScrollPane(content);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(BG);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
-        scroll.getHorizontalScrollBar().setUnitIncrement(16);
+        styleScrollPane(scroll, BG);
         dialog.add(scroll, BorderLayout.CENTER);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
@@ -1440,8 +1472,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         area.setSelectionColor(new Color(50, 80, 140));
 
         JScrollPane scroll = new JScrollPane(area);
+        styleScrollPane(scroll, new Color(13, 15, 20));
         scroll.setBorder(BorderFactory.createLineBorder(BORDER));
-        scroll.getViewport().setBackground(new Color(13, 15, 20));
         scroll.setPreferredSize(new Dimension(720, 420));
 
         JPanel header = new JPanel(new BorderLayout());
@@ -1508,9 +1540,7 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         }
 
         JScrollPane scroll = new JScrollPane(grid);
-        scroll.setBorder(null);
-        scroll.getViewport().setBackground(BG);
-        scroll.getVerticalScrollBar().setUnitIncrement(16);
+        styleScrollPane(scroll, BG);
         dialog.add(scroll, BorderLayout.CENTER);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
@@ -1525,13 +1555,25 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         practiceDialog.showForAlgorithm(state.selectedAlgo);
     }
 
+    private void openAiChatDialog() {
+        AiChatDialog dialog = new AiChatDialog(this, darkMode, state.selectedAlgo);
+        dialog.setVisible(true);
+    }
+
     private JPanel buildAppCard(String[] row) {
-        JPanel card = new JPanel(new BorderLayout(0, 8));
-        card.setBackground(CARD);
-        card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(BORDER, 1),
-            new EmptyBorder(14, 16, 14, 16)
-        ));
+        JPanel card = new JPanel(new BorderLayout(0, 8)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(CARD);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+            }
+        };
+        card.setOpaque(false);
+        card.setBorder(new EmptyBorder(14, 16, 14, 16));
 
         JPanel top = new JPanel(new BorderLayout(8, 0));
         top.setOpaque(false);
@@ -1584,7 +1626,9 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(bg);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(new Color(fg.getRed(), fg.getGreen(), fg.getBlue(), darkMode ? 95 : 80));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 super.paintComponent(g);
             }
         };
@@ -1595,6 +1639,64 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return label;
     }
 
+    private void styleScrollPane(JScrollPane scroll, Color viewportBg) {
+        scroll.setBorder(null);
+        scroll.getViewport().setBackground(viewportBg);
+        scroll.getVerticalScrollBar().setUnitIncrement(20);
+        scroll.getHorizontalScrollBar().setUnitIncrement(20);
+        styleScrollBar(scroll.getVerticalScrollBar(), viewportBg);
+        styleScrollBar(scroll.getHorizontalScrollBar(), viewportBg);
+    }
+
+    private void styleScrollBar(JScrollBar scrollBar, Color trackColor) {
+        scrollBar.setPreferredSize(new Dimension(10, 10));
+        scrollBar.setOpaque(false);
+        scrollBar.setUI(new BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.trackColor = trackColor;
+                this.thumbColor = TEXT_HINT;
+            }
+
+            @Override
+            protected JButton createDecreaseButton(int orientation) {
+                return zeroScrollButton();
+            }
+
+            @Override
+            protected JButton createIncreaseButton(int orientation) {
+                return zeroScrollButton();
+            }
+
+            @Override
+            protected void paintTrack(Graphics g, JComponent c, java.awt.Rectangle trackBounds) {
+                g.setColor(trackColor);
+                g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
+            }
+
+            @Override
+            protected void paintThumb(Graphics g, JComponent c, java.awt.Rectangle thumbBounds) {
+                if (!scrollBar.isEnabled() || thumbBounds.width <= 0 || thumbBounds.height <= 0) {
+                    return;
+                }
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(darkMode ? new Color(75, 90, 115) : new Color(170, 184, 205));
+                g2.fillRoundRect(thumbBounds.x + 2, thumbBounds.y + 2,
+                    thumbBounds.width - 4, thumbBounds.height - 4, 8, 8);
+                g2.dispose();
+            }
+        });
+    }
+
+    private JButton zeroScrollButton() {
+        JButton button = new JButton();
+        button.setPreferredSize(new Dimension(0, 0));
+        button.setMinimumSize(new Dimension(0, 0));
+        button.setMaximumSize(new Dimension(0, 0));
+        return button;
+    }
+
     private JPanel roundPanel() {
         JPanel panel = new JPanel() {
             @Override
@@ -1602,10 +1704,13 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(CARD);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
             }
         };
         panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(10, 12, 10, 12));
         return panel;
     }
 
@@ -1623,15 +1728,37 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         return label;
     }
 
+    private JPanel metricChip(JLabel label) {
+        JPanel chip = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(darkMode ? new Color(16, 25, 42) : new Color(248, 250, 252));
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+            }
+        };
+        chip.setOpaque(false);
+        chip.setBorder(new EmptyBorder(6, 10, 6, 10));
+        chip.add(label, BorderLayout.CENTER);
+        return chip;
+    }
+
     private JTextField styledField(int cols) {
         JTextField field = new JTextField(cols);
-        field.setBackground(CARD);
+        field.setBackground(darkMode ? new Color(12, 18, 32) : new Color(248, 250, 252));
         field.setForeground(TEXT);
         field.setCaretColor(ACCENT);
         field.setFont(MONO);
+        field.setSelectionColor(ALGO_ACTIVE_BG);
+        field.setSelectedTextColor(TEXT);
+        Dimension size = field.getPreferredSize();
+        field.setPreferredSize(new Dimension(size.width, 34));
         field.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(BORDER, 1, true),
-            new EmptyBorder(4, 8, 4, 8)
+            new EmptyBorder(6, 10, 6, 10)
         ));
         return field;
     }
@@ -1642,12 +1769,13 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
         JComponent editor = spinner.getEditor();
         if (editor instanceof DefaultEditor) {
             JTextField field = ((DefaultEditor) editor).getTextField();
-            field.setBackground(CARD);
+            field.setBackground(darkMode ? new Color(12, 18, 32) : new Color(248, 250, 252));
             field.setForeground(TEXT);
             field.setFont(MONO);
             field.setCaretColor(ACCENT);
-            field.setBorder(new EmptyBorder(2, 4, 2, 4));
+            field.setBorder(new EmptyBorder(4, 6, 4, 6));
         }
+        spinner.setBorder(BorderFactory.createLineBorder(BORDER, 1, true));
         return spinner;
     }
 
@@ -1662,12 +1790,51 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
 
     private JButton actionButton(String label, boolean primary) {
         JButton button = new JButton(label) {
+            private boolean hovered = false;
+            private boolean pressed = false;
+
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        hovered = true;
+                        repaint();
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        hovered = false;
+                        pressed = false;
+                        repaint();
+                    }
+
+                    @Override
+                    public void mousePressed(MouseEvent e) {
+                        pressed = true;
+                        repaint();
+                    }
+
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        pressed = false;
+                        repaint();
+                    }
+                });
+            }
+
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(primary ? ACCENT : CARD);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                Color fill = primary ? ACCENT : hovered ? ALGO_HOVER_BG : CARD;
+                if (pressed) {
+                    fill = primary ? ACCENT.darker() : ALGO_ACTIVE_BG;
+                }
+                g2.setColor(fill);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.setColor(primary ? ACCENT : BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                setForeground(primary ? Color.WHITE : hovered ? TEXT : TEXT_DIM);
                 super.paintComponent(g);
             }
         };
@@ -1702,8 +1869,8 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             setFocusPainted(false);
             setHorizontalAlignment(rightAligned ? SwingConstants.RIGHT : SwingConstants.LEFT);
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            setMaximumSize(new Dimension(232, 32));
-            setPreferredSize(new Dimension(232, 32));
+            setMaximumSize(new Dimension(232, 36));
+            setPreferredSize(new Dimension(232, 36));
             setBorder(new EmptyBorder(0, rightAligned ? 10 : 18, 0, rightAligned ? 18 : 10));
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -1727,13 +1894,13 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             boolean active = algorithmName.equals(state.selectedAlgo);
             if (active) {
                 g2.setColor(ALGO_ACTIVE_BG);
-                g2.fillRoundRect(8, 2, getWidth() - 16, getHeight() - 4, 6, 6);
-                int stripeX = rightAligned ? getWidth() - 11 : 8;
+                g2.fillRoundRect(8, 3, getWidth() - 16, getHeight() - 6, 8, 8);
+                int stripeX = rightAligned ? getWidth() - 13 : 8;
                 g2.setColor(accent);
-                g2.fillRoundRect(stripeX, 2, 3, getHeight() - 4, 2, 2);
+                g2.fillRoundRect(stripeX, 7, 5, getHeight() - 14, 4, 4);
             } else if (hovered) {
                 g2.setColor(ALGO_HOVER_BG);
-                g2.fillRoundRect(8, 2, getWidth() - 16, getHeight() - 4, 6, 6);
+                g2.fillRoundRect(8, 3, getWidth() - 16, getHeight() - 6, 8, 8);
             }
             setForeground(active ? accent : hovered ? TEXT : TEXT_DIM);
             super.paintComponent(g);

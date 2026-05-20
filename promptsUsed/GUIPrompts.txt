@@ -1,0 +1,5 @@
+"How could I create a light mode alternative to the visual?"
+"If an unsorted array is selected for a searching algorithm that necessitates a sorted array, prompt the user to select a sorting array"
+"Add a slider to increase/decrease the speed of the visual"
+"Create a button with a drop down where we can implement educational uses and situations for the algorithms"
+"How could we implement a practice feature similar to this *insert StudyCS image* so people could practice running algorithms?"

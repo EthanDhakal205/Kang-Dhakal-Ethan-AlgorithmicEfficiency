@@ -1,0 +1,8 @@
+"Provide a list of known searching algorithms"
+"Provide a list of known sorting algorithms"
+"Create a parent class that can run a visual for any algorithm selected"
+"Enhance the code for the algorithms so they run more efficiently"
+"Create a separate class that can run any algorithm to be used in the parent class"
+"when bigger arrays are implemented, create more rows"
+"Create a button to display our code that we created for the algorithms"
+"Make a sample button that provides a random array that fits the requirements for the algorithm used"
