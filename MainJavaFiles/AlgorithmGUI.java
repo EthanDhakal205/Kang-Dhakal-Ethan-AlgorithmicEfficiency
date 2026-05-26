@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -440,57 +441,44 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
             new EmptyBorder(12, 24, 12, 24)
         ));
-
         algoLabel = new JLabel(state.selectedAlgo);
         algoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         algoLabel.setForeground(TEXT);
-
         algoMetaLabel = new JLabel(selectedAlgorithmMeta());
         algoMetaLabel.setFont(SMALL);
         algoMetaLabel.setForeground(TEXT_DIM);
-
         JPanel titleStack = new JPanel();
         titleStack.setOpaque(false);
         titleStack.setLayout(new BoxLayout(titleStack, BoxLayout.Y_AXIS));
         titleStack.add(algoLabel);
         titleStack.add(Box.createVerticalStrut(2));
         titleStack.add(algoMetaLabel);
-
         themeBtn = actionButton(darkMode ? "light" : "dark", false);
         themeBtn.addActionListener(e -> {
             darkMode = !darkMode;
             rebuildUI();
         });
-
         JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         westPanel.setOpaque(false);
         westPanel.add(themeBtn);
         westPanel.add(titleStack);
         bar.add(westPanel, BorderLayout.WEST);
-
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
-
         captionToggle = styledCheckbox("captions");
         captionToggle.setSelected(true);
         captionToggle.addActionListener(e -> state.showCaptions = captionToggle.isSelected());
-
         JButton codeBtn = actionButton("code", false);
         codeBtn.addActionListener(e -> showCodeDialog());
-
         JButton aiBtn = actionButton("ai chat", false);
         aiBtn.addActionListener(e -> openAiChatDialog());
-
         JButton appsBtn = actionButton("applications", false);
         appsBtn.addActionListener(e -> showAppsMenu(appsBtn));
-
         JButton practiceBtn = actionButton("practice", false);
         practiceBtn.addActionListener(e -> openPracticeDialog());
-
         JLabel speedLabel = new JLabel("speed");
         speedLabel.setFont(SMALL);
         speedLabel.setForeground(TEXT_DIM);
-
         speedSlider = new JSlider(1, 5, 3);
         speedSlider.setOpaque(false);
         speedSlider.setForeground(ACCENT);
@@ -499,7 +487,6 @@ public class AlgorithmGUI extends JFrame implements AlgoRunner.Callbacks {
             int[] delays = {700, 450, 280, 130, 50};
             state.stepDelay = delays[speedSlider.getValue() - 1];
         });
-
         right.add(captionToggle);
         right.add(codeBtn);
         right.add(aiBtn);

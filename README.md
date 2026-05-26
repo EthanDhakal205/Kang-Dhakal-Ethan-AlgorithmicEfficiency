@@ -4,8 +4,8 @@ Install OpenJDK 25 from adoptium.net
 ## Run the visualizer
 
 ```powershell
-javac -d bin Searching\*.java
-java -cp bin AlgorithmGUI
+javac -d out MainJavaFiles\*.java
+java -cp out AlgorithmGUI
 ```
 
 ## Local AI chat

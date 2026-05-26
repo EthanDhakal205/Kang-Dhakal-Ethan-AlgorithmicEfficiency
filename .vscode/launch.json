@@ -6,7 +6,7 @@
             "name": "Run AlgorithmGUI",
             "request": "launch",
             "mainClass": "AlgorithmGUI",
-            "cwd": "${workspaceFolder}/Searching"
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

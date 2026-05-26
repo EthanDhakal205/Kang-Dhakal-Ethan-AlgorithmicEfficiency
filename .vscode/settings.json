@@ -1,8 +1,8 @@
 {
     "java.project.sourcePaths": [
-        "Searching"
+        "MainJavaFiles"
     ],
-    "java.project.outputPath": "bin/classes",
+    "java.project.outputPath": "out",
     "java.import.exclusions": [
         "AlgoVizGUI_fixed/**",
         "**/target/**",
