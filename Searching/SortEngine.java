@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.Set;
 
 class SortEngine {
+    static final int BOGO_SORT_VISUAL_LIMIT = 6;
 
     enum StepType {
         INITIAL,
@@ -271,8 +272,10 @@ class SortEngine {
     }
 
     private static void runBogoSort(int[] arr, Builder builder) {
-        if (arr.length > 6) {
-            throw new IllegalArgumentException("Bogo Sort is limited to 6 integers or fewer in this visualizer.");
+        if (arr.length > BOGO_SORT_VISUAL_LIMIT) {
+            throw new IllegalArgumentException(
+                "Bogo Sort is limited to " + BOGO_SORT_VISUAL_LIMIT
+                    + " integers or fewer in this visualizer.");
         }
         builder.add(arr, StepType.INITIAL,
             "Starting Bogo Sort. Random shuffles continue until the array happens to be sorted.");

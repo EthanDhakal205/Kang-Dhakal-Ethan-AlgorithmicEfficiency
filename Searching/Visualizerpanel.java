@@ -155,13 +155,17 @@ class VisualizerPanel extends JPanel {
         this.scrollParent = scrollParent;
     }
 
+    private int viewportWidth() {
+        int width = scrollParent != null ? scrollParent.getViewport().getWidth() : getWidth();
+        return width > 0 ? width : 800;
+    }
+
     @Override
     public Dimension getPreferredSize() {
+        int width = viewportWidth();
         if (!state.usesArrayVisualizer() || state.currentArray == null || state.currentArray.length == 0) {
-            return new Dimension(800, 430);
+            return new Dimension(width, 430);
         }
-        int width = scrollParent != null ? scrollParent.getViewport().getWidth() : 800;
-        if (width <= 0) width = 800;
         int perRow = Math.max(1, (width - 48 + 6) / (56 + 6));
         int numRows = (state.currentArray.length + perRow - 1) / perRow;
         return new Dimension(width, Math.max(430, numRows * 160 + 80));
@@ -191,13 +195,21 @@ class VisualizerPanel extends JPanel {
         if (state.captionText.isEmpty()) return;
 
         Rectangle visible = getVisibleRect();
-        int width = getWidth();
+        int width = visible.width > 0 ? visible.width : getWidth();
         int visibleHeight = visible.height > 0 ? visible.height : getHeight();
 
         g2.setFont(CAPTION_FONT);
         FontMetrics metrics = g2.getFontMetrics();
-        int textWidth = metrics.stringWidth(state.captionText);
         int padding = 14;
+        int maxTextWidth = Math.max(120, Math.min(720, width - 48 - padding * 2));
+        List<String> lines = wrapText(state.captionText, metrics, maxTextWidth);
+        int textWidth = 0;
+        for (String line : lines) {
+            textWidth = Math.max(textWidth, metrics.stringWidth(line));
+        }
+        int lineHeight = metrics.getHeight();
+        int boxWidth = textWidth + padding * 2;
+        int boxHeight = lines.size() * lineHeight + 12;
 
         float alpha, slideY;
         if (state.captionPhase == 1) {
@@ -216,19 +228,66 @@ class VisualizerPanel extends JPanel {
         if (clampedAlpha < 0.02f) return;
 
         int textY = (int) (visible.y + visibleHeight - 24 + slideY);
-        int textX = (width - textWidth) / 2;
+        int boxX = visible.x + Math.max(12, (width - boxWidth) / 2);
+        int boxY = textY - boxHeight + metrics.getDescent();
+        int textX = boxX + padding;
+        int firstBaseline = boxY + 6 + metrics.getAscent();
 
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, clampedAlpha));
         g2.setColor(CAPTION_BG);
-        g2.fillRoundRect(textX - padding, textY - metrics.getAscent() - 6,
-            textWidth + padding * 2, metrics.getHeight() + 12, 12, 12);
+        g2.fillRoundRect(boxX, boxY, boxWidth, boxHeight, 12, 12);
         g2.setColor(BORDER);
         g2.setStroke(new BasicStroke(0.8f));
-        g2.drawRoundRect(textX - padding, textY - metrics.getAscent() - 6,
-            textWidth + padding * 2, metrics.getHeight() + 12, 12, 12);
+        g2.drawRoundRect(boxX, boxY, boxWidth, boxHeight, 12, 12);
         g2.setColor(TEXT);
-        g2.drawString(state.captionText, textX, textY);
+        for (int i = 0; i < lines.size(); i++) {
+            g2.drawString(lines.get(i), textX, firstBaseline + i * lineHeight);
+        }
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+    }
+
+    private List<String> wrapText(String text, FontMetrics metrics, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split("\\s+")) {
+            String candidate = line.length() == 0 ? word : line + " " + word;
+            if (metrics.stringWidth(candidate) <= maxWidth) {
+                line.setLength(0);
+                line.append(candidate);
+            } else {
+                if (line.length() > 0) {
+                    lines.add(line.toString());
+                    line.setLength(0);
+                }
+                addWrappedWord(lines, line, word, metrics, maxWidth);
+            }
+        }
+        if (line.length() > 0) {
+            lines.add(line.toString());
+        }
+        if (lines.isEmpty()) {
+            lines.add(text);
+        }
+        return lines;
+    }
+
+    private void addWrappedWord(List<String> lines, StringBuilder line, String word,
+                                FontMetrics metrics, int maxWidth) {
+        if (metrics.stringWidth(word) <= maxWidth) {
+            line.append(word);
+            return;
+        }
+
+        StringBuilder chunk = new StringBuilder();
+        for (int i = 0; i < word.length(); i++) {
+            String candidate = chunk.toString() + word.charAt(i);
+            if (chunk.length() > 0 && metrics.stringWidth(candidate) > maxWidth) {
+                lines.add(chunk.toString());
+                chunk.setLength(0);
+            }
+            chunk.append(word.charAt(i));
+        }
+        line.append(chunk);
     }
 
     // ── Search array ──────────────────────────────────────────────────────────
